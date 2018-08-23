@@ -1,0 +1,10 @@
+.ipynb_checkpoints/
+.Trash-0/
+local/
+__pycache__/
+.vscode
+.DS_Store
+*.h5
+pykor.egg-info/
+build/
+dist/
