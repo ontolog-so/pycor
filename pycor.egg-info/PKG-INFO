@@ -1,0 +1,14 @@
+Metadata-Version: 1.2
+Name: pycor
+Version: 0.0.3
+Summary: Python based Korean Language Processing Lib, POS Tagger
+Home-page: https://github.com/ontolog-so/pycor
+Author: Ikchan Kwon
+Author-email: ontolog.so@gmail.com
+License: UNKNOWN
+Download-URL: https://github.com/ontolog-so/pykor/archive/0.0.3.tar.gz
+Description: UNKNOWN
+Keywords: Korean NLP,POS Tagger
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3.6
+Requires-Python: >=3.6
