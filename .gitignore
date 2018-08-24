@@ -5,6 +5,6 @@ __pycache__/
 .vscode
 .DS_Store
 *.h5
-pykor.egg-info/
+pycor.egg-info/
 build/
 dist/
