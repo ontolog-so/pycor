@@ -91,6 +91,14 @@ class Sentence(WordGroup):
         super().__init__()
 
 
+class Document:
+    def __init__(self, sentence_array, words_array):
+        self.sentence_array = sentence_array 
+        self.words_array = words_array
+
+
+
+
 ########################
 #  Head
 ########################

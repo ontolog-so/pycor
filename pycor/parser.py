@@ -294,6 +294,24 @@ class SentenceParser:
         self.wordmap.load(path)
 
     ########################
+    #  Read all Document  
+    ########################
+    def readtext(self, text):
+        """
+        return Document : sentence_array, words_array
+        """
+        sentence_array = []
+        words_array = []
+
+        for row in text.splitlines():
+                self._readrow(row,sentence_array,words_array)  
+                words_array.clear()
+        
+        words_array = self.resolveDocument(sentence_array)
+        doc = sm.Document(sentence_array, words_array)
+        return doc
+
+    ########################
     #  라인별 읽기 
     ########################
     def readrow(self,text):
