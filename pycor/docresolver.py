@@ -104,7 +104,7 @@ class DocResolver:
                 
         sortedlist = sorted(sentenceWrapList, key=lambda wrap:wrap.count, reverse=True)
 
-        print("Sentence Count:", sentenceCount)
+        # print("Sentence Count:", sentenceCount)
         
         sentence_array_temp = []
 

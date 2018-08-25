@@ -3,7 +3,8 @@ from pycor import trainer, parser, docresolver, utils, korutils
 import pycor.std.korstandard
 
 __all__ = ["setmodel", "loadmodel", "savemodel","train", "buildvocab", "readfile", "readtext",
-            "trim","trimfile","keywords","keywordsFromText", "setwordlimit"]
+            "trim","trimfile","keywords","keywordsFromText", "setwordlimit", 
+            "printSentences", "abstract", "abstractFromText"]
 
 ESC_TAGS = set(['MM','DN','NNB', 'PT','QS','QE','QM','VOID','EC','CL','SC'])
 
@@ -116,17 +117,29 @@ def keywordsFromText(text, rate=0.05):
     return _resolver.extractKeywords(words_array,rate)
 
 
-def abstract(words_array, rate=0.05):
-    """
-    return dictionary {keywod:count,...}
-    """
-    return _resolver.extractKeywords(words_array,rate)
-
-
-def abstractFromText(text, rate=0.05):
+def abstract(words_array, rate=0.05, count=3):
     """
     param rate : 0~1 사이의 float, 기본값 0.05
-    return dictionary {keywod:count,...}
+    param count : 문장 개수  , 기본값 3
+    return keywords, sentences
+    """
+    keywords = _resolver.extractKeywords(words_array, rate)
+    if len(keywords) < 1:
+        rate /= 2
+        keywords = _resolver.extractKeywords(words_array, rate)
+
+    sentences = _resolver.abstractDocument(keywords, words_array, count)
+    return keywords, sentences
+
+
+def abstractFromText(text, rate=0.05, count=3):
+    """
+    param rate : 0~1 사이의 float, 기본값 0.05
+    param count : 문장 개수 , 기본값 3
+    return keywords, sentences
     """
     _,words_array = readtext(text)
-    return _resolver.extractKeywords(words_array,rate)
+    return abstract(words_array,rate, count)
+
+def printSentences(sentences):
+    docresolver.printSentences(sentences)
