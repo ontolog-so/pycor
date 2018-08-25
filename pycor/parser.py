@@ -271,11 +271,12 @@ class SentenceParser:
         self.wordparser.wordmap = self.wordmap
         self.wordmap.wordparser = wordparser
     
-    def loadfile(self, path, verbose=False):
-        if verbose :
-            print("loading ", path)
-        self.verbose = verbose
-
+    def loadfile(self, path):
+        sentence_array = self._loadfile(path)
+        words_array = self.resolveDocument(sentence_array)
+        return sentence_array, words_array
+    
+    def _loadfile(self, path):
         sentence_array = []
         words_array = []
 
@@ -287,9 +288,7 @@ class SentenceParser:
                 # sentence_array.extend(sentences)
                 words_array.clear()
             file.close()
-        
-        words_array = self.resolveDocument(sentence_array)
-        return sentence_array, words_array
+        return sentence_array
 
     def savemodel(self, path):
         print("Saving Model to",path)

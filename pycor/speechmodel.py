@@ -185,11 +185,12 @@ _VOID_Tail = Tail(u'','')
 #  단어 정보 및 처리 객체 
 ########################
 class WordMap :
-    def __init__(self, wordparser):
+    def __init__(self, wordparser, wordlimit=200000):
         self.wordparser = wordparser
         self.words = {}
         self.heads = {}
         self.tails = {}
+        self.wordlimit = wordlimit
         
     def getword(self, text, prev, nxt):
         word = self.words.get(text)
@@ -206,6 +207,10 @@ class WordMap :
     def load(self, modelDir):
         self.readheads(path=modelDir + "/heads.csv")
         self.readtails(path=modelDir + "/tails.csv")
+
+    def clearwords(self):
+        print("Clear words size:", len(self.words))
+        self.words.clear()
 
     #####################################################################
     #  결과 파일 출력 

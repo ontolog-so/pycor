@@ -3,7 +3,7 @@ from pycor import trainer, parser, docresolver, utils, korutils
 import pycor.std.korstandard
 
 __all__ = ["setmodel", "loadmodel", "savemodel","train", "buildvocab", "readfile", "readtext",
-            "trim","trimfile","keywords","keywordsFromText"]
+            "trim","trimfile","keywords","keywordsFromText", "setwordlimit"]
 
 ESC_TAGS = set(['MM','DN','NNB', 'PT','QS','QE','QM','VOID','EC','CL','SC'])
 
@@ -12,37 +12,42 @@ ESC_TAGS = set(['MM','DN','NNB', 'PT','QS','QE','QM','VOID','EC','CL','SC'])
 #############################
 _trainer = trainer.Trainer()
 _wordmap = _trainer.wordmap
-_parser = parser.SentenceParser(wordMap=_wordmap)
 
 _resolver = docresolver.DocResolver()
 _resolver.setwordmap(_wordmap)
 
+def setwordlimit(limit):
+    _trainer.setwordlimit(limit)
 
 def setmodel(wordmap):
     _wordmap = wordmap
     _trainer.setmodel(wordmap)
-    _parser.setmodel(wordmap)
 
 def loadmodel(model_dir):
-    _parser.loadmodel(model_dir)
+    _trainer.loadmodel(model_dir)
 
 def savemodel(model_dir):
-    _parser.savemodel(model_dir)
+    _trainer.savemodel(model_dir)
 
 
-def train(data_dir, pattern="*.txt"):
+def train(data_dir, pattern="*.txt", limit=0):
     """ Load training data """
+    stopwatch = utils.StopWatch()
     filelist = utils.listfiles(data_dir,pattern)
-    print("Loading Training Data - size:", len(filelist))
     index = 0
+    if limit > 0:
+        filelist = filelist[:limit]
+
+    print("Loading Training Data - size:", len(filelist) )
+
     for file in filelist:
-        _trainer.loadfile(file)
+        _trainer.train(file)
         index += 1
         if index % 100 == 0:
             print(index,end=">")
             if index % 1000 == 0:
                 print()
-    print("Trained ", index, "files.")
+    print("Trained ", index, "files : ellapsed time", stopwatch.millisecstr(), "ms.")
 
 def buildvocab():
     _trainer.buildVocab()
@@ -51,28 +56,28 @@ def readfile(filepath):
     """
     return sentence_array, wordObjs_array(2d)
     """
-    return _parser.loadfile(filepath)
+    return _trainer.loadfile(filepath)
 
 
 def readtext(text):
     """
     return sentence_array, wordObjs_array(2d)
     """
-    return _parser.readtext(text)
+    return _trainer.readtext(text)
 
 
 def trim(text):
     """
     return words_array (2d), tags_array(2d)
     """
-    _, words_array = _parser.readtext(text)
+    _, words_array = _trainer.readtext(text)
     return __trim(words_array)
 
 def trimfile(filepath):
     """
     return words_array (2d), tags_array(2d)
     """
-    _, words_array = _parser.loadfile(filepath)
+    _, words_array = _trainer.loadfile(filepath)
     return __trim(words_array)
 
 def __trim(words_array):

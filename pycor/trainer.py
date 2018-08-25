@@ -1,4 +1,5 @@
 import re
+from threading import Lock
 from pycor import speechmodel , korutils, parser
 
 
@@ -92,11 +93,19 @@ def classifyAmbi(head, tags, snglist, ylist, clist, ambilist):
 
 
 class Trainer(parser.SentenceParser) :
-    def __init__(self):
+    def __init__(self, wordsthreshold=300000):
         super().__init__()
+        self.wordsthreshold = wordsthreshold
         print("Init Trainer")
+        self.lock = Lock()
+
+    def setwordlimit(self, wordsthreshold):
+        self.wordsthreshold = wordsthreshold
 
     def buildVocab(self) :
+        if len(self.wordmap.words) < 3:
+            return
+
         for word in self.wordmap.words.values():
             self.scoreword(word)
         
@@ -106,13 +115,27 @@ class Trainer(parser.SentenceParser) :
         print("용언 Count:", len(ylist))
         print("체언 Count:", len(clist))
         print("Ambiguous Count:", len(ambilist))
+        print("Heads Count:", len(self.wordmap.heads))
+        print("Tails Count:", len(self.wordmap.tails))
+
+        self.wordmap.clearwords()
 
         return snglist, ylist, clist, ambilist
+    
+    def train(self,filepath):
+        sentence_array = self._loadfile(filepath)
+        self.checkVocab(sentence_array)
 
 
-    def resolveDocument(self, sentence_array):
-        # By-pass resolve
-        return None
+    def checkVocab(self, sentence_array):
+        self.lock.acquire()
+        try:
+            if len(self.wordmap.words) > self.wordsthreshold:
+                self.buildVocab()
+            return None
+        finally:
+            self.lock.release()
+        
 
     
 
