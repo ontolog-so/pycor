@@ -1,12 +1,15 @@
 from setuptools import setup, find_packages
+from pycor import VERSION 
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding='utf8') as fh:
     long_description = fh.read()
 
 setup(
     name             = 'pycor',
-    version          = '0.0.3',
+    version          = VERSION.VERSION,
     description      = 'Python based Korean Language Processing Lib, POS Tagger',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author           = 'Ikchan Kwon',
     author_email     = 'ontolog.so@gmail.com',
     url              = 'https://github.com/ontolog-so/pycor',
