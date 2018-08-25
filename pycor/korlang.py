@@ -4,7 +4,7 @@ import pycor.std.korstandard
 
 __all__ = ["setmodel", "loadmodel", "savemodel","train", "buildvocab", "readfile", "readtext",
             "trim","trimfile","keywords","keywordsFromText", "setwordlimit", 
-            "printSentences", "abstract", "abstractFromText"]
+            "printSentences", "abstract", "abstractKeywords","totexts"]
 
 ESC_TAGS = set(['MM','DN','NNB', 'PT','QS','QE','QM','VOID','EC','CL','SC'])
 
@@ -117,7 +117,7 @@ def keywordsFromText(text, rate=0.05):
     return _resolver.extractKeywords(words_array,rate)
 
 
-def abstract(words_array, rate=0.05, count=3):
+def abstractKeywords(words_array, rate=0.05, count=3):
     """
     param rate : 0~1 사이의 float, 기본값 0.05
     param count : 문장 개수  , 기본값 3
@@ -132,14 +132,25 @@ def abstract(words_array, rate=0.05, count=3):
     return keywords, sentences
 
 
-def abstractFromText(text, rate=0.05, count=3):
+def abstract(text, rate=0.05, count=3):
     """
     param rate : 0~1 사이의 float, 기본값 0.05
     param count : 문장 개수 , 기본값 3
     return keywords, sentences
     """
     _,words_array = readtext(text)
-    return abstract(words_array,rate, count)
+    return abstractKeywords(words_array,rate, count)
 
 def printSentences(sentences):
     docresolver.printSentences(sentences)
+
+# line단위 텍스트로 변환
+# return string array
+def totexts(sentences):
+    lines = []
+    for sentence in sentences:
+        aline =[]
+        for word in sentence:
+            aline.append(word.text)
+        lines.append(' '.join(aline))
+    return lines
