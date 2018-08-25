@@ -1,4 +1,127 @@
 
-import pycor.parser
-import pycor.trainer
+from pycor import trainer, parser, docresolver, utils, korutils
 import pycor.std.korstandard
+
+__all__ = ["setmodel", "loadmodel", "savemodel","train", "buildvocab", "readfile", "readtext",
+            "trim","trimfile","keywords","keywordsFromText"]
+
+ESC_TAGS = set(['MM','DN','NNB', 'PT','QS','QE','QM','VOID','EC','CL','SC'])
+
+#############################
+# Singletons
+#############################
+_trainer = trainer.Trainer()
+_wordmap = _trainer.wordmap
+_parser = parser.SentenceParser(wordMap=_wordmap)
+
+_resolver = docresolver.DocResolver()
+_resolver.setwordmap(_wordmap)
+
+
+def setmodel(wordmap):
+    _wordmap = wordmap
+    _trainer.setmodel(wordmap)
+    _parser.setmodel(wordmap)
+
+def loadmodel(model_dir):
+    _parser.loadmodel(model_dir)
+
+def savemodel(model_dir):
+    _parser.savemodel(model_dir)
+
+
+def train(data_dir, pattern="*.txt"):
+    """ Load training data """
+    filelist = utils.listfiles(data_dir,pattern)
+    print("Loading Training Data - size:", len(filelist))
+    index = 0
+    for file in filelist:
+        _trainer.loadfile(file)
+        index += 1
+        if index % 100 == 0:
+            print(index,end=">")
+            if index % 1000 == 0:
+                print()
+    print("Trained ", index, "files.")
+
+def buildvocab():
+    _trainer.buildVocab()
+
+def readfile(filepath):
+    """
+    return sentence_array, wordObjs_array(2d)
+    """
+    return _parser.loadfile(filepath)
+
+
+def readtext(text):
+    """
+    return sentence_array, wordObjs_array(2d)
+    """
+    return _parser.readtext(text)
+
+
+def trim(text):
+    """
+    return words_array (2d), tags_array(2d)
+    """
+    _, words_array = _parser.readtext(text)
+    return __trim(words_array)
+
+def trimfile(filepath):
+    """
+    return words_array (2d), tags_array(2d)
+    """
+    _, words_array = _parser.loadfile(filepath)
+    return __trim(words_array)
+
+def __trim(words_array):
+    rtns_array = []
+    tags_array = []
+    for sentence in words_array:
+        words = []
+        tags = []
+        for word in sentence:
+            if word.bestpair:
+                if len(ESC_TAGS & word.bestpair.head.pos) == 0:
+                    words.append(word.bestpair.head.text)
+                    tags.append(word.bestpair.tags)
+            else:
+                words.append(word.text)
+                tags.append([])
+        if len(words)>0:
+            rtns_array.append(words)
+            tags_array.append(tags)
+    return rtns_array,tags_array
+
+
+def keywords(words_array, rate=0.05):
+    """
+    return dictionary {keywod:count,...}
+    """
+    return _resolver.extractKeywords(words_array,rate)
+
+
+def keywordsFromText(text, rate=0.05):
+    """
+    param rate : 0~1 사이의 float, 기본값 0.05
+    return dictionary {keywod:count,...}
+    """
+    _,words_array = readtext(text)
+    return _resolver.extractKeywords(words_array,rate)
+
+
+def abstract(words_array, rate=0.05):
+    """
+    return dictionary {keywod:count,...}
+    """
+    return _resolver.extractKeywords(words_array,rate)
+
+
+def abstractFromText(text, rate=0.05):
+    """
+    param rate : 0~1 사이의 float, 기본값 0.05
+    return dictionary {keywod:count,...}
+    """
+    _,words_array = readtext(text)
+    return _resolver.extractKeywords(words_array,rate)

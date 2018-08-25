@@ -1,3 +1,2 @@
-from . import _korlang
-
-__all__ = ['_korlang']
+from . import korlang
+from .korlang import *

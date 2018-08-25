@@ -67,4 +67,24 @@ def writecsv(path, datalist, handler):
             handler(writer, data)
         csvfile.close()
     print("Write ", path,  "  소요시간:" , stopwatch.secmilli() , "(", stopwatch.millisecstr(), "ms.)" )
-    
+
+
+def listfiles(path, pattern=None, cascade=True):
+    import fnmatch
+    import os
+
+    result_arr = []
+    filenames = os.listdir(path)
+    for filename in filenames:
+        full_filename = os.path.join(path, filename)
+        if os.path.isdir(full_filename):
+            if cascade:
+                lst = listfiles(full_filename, pattern, cascade)
+                result_arr.extend(lst)
+        else:
+            if pattern:
+                if fnmatch.fnmatch(filename, pattern):
+                    result_arr.append(full_filename)
+            else:
+                result_arr.append(full_filename)
+    return result_arr

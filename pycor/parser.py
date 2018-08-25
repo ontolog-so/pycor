@@ -1,4 +1,5 @@
 import re
+import os
 import pycor.speechmodel as sm
 from pycor import langmodel, korutils , docresolver
 
@@ -254,7 +255,6 @@ class WordParser:
 #################################################
 class SentenceParser:
     def __init__(self, wordparser=WordParser(), quoteclues=_quoteclues, wordMap=None):
-        print("Init SentenceParser")
         self._initimpl(wordparser, quoteclues, wordMap)
         self.verbose = False
         
@@ -262,10 +262,16 @@ class SentenceParser:
         if wordMap is None:
             wordMap = sm.WordMap(wordparser)
         self.wordmap = wordMap
+        self.wordparser = wordparser
         self.quoteclues = quoteclues
         wordparser.wordmap = self.wordmap
     
-    def loadfile(self, path, verbose=True):
+    def setmodel(self, wordMap):
+        self.wordmap = wordMap
+        self.wordparser.wordmap = self.wordmap
+        self.wordmap.wordparser = wordparser
+    
+    def loadfile(self, path, verbose=False):
         if verbose :
             print("loading ", path)
         self.verbose = verbose
@@ -287,6 +293,7 @@ class SentenceParser:
 
     def savemodel(self, path):
         print("Saving Model to",path)
+        os.makedirs(path, exist_ok=True)
         self.wordmap.save(path)
 
     def loadmodel(self, path):
@@ -308,8 +315,7 @@ class SentenceParser:
                 words_array.clear()
         
         words_array = self.resolveDocument(sentence_array)
-        doc = sm.Document(sentence_array, words_array)
-        return doc
+        return sentence_array, words_array
 
     ########################
     #  라인별 읽기 
