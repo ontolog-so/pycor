@@ -32,6 +32,12 @@ class Word:
         self.particles.append(pair)
         return pair
     
+    def clear(self):
+        if self.bestpair:
+            del self.particles[:]
+
+        del self.prevnexts[:]
+
 class Pair:
     def __init__(self,head,tail, score=0.0, ambi=False):
         self.head = head
@@ -210,7 +216,8 @@ class WordMap :
 
     def clearwords(self):
         print("Clear words size:", len(self.words))
-        self.words.clear()
+        for word in self.words.values():
+            word.clear()
 
     #####################################################################
     #  결과 파일 출력 

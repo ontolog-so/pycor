@@ -500,6 +500,21 @@ jkpIda = lm.regAux('다').tag("JKP" ).incase([afterVowel]).after([
 jkcI = lm.regAux('이').tag("JKC").incase([afterJongsung,final])
 jkcGa = lm.regAux('가').tag("JKC").incase([afterVowel,final])
 
+# jkcI = lm.regAux('이').tag("JKC").incase([afterJongsung,final,
+#         lm.ConstraintCollocation(nextWordFirst='되')
+#                 .Or(lm.ConstraintCollocation(nextWordFirst='된'))
+#                 .Or(lm.ConstraintCollocation(nextWordFirst='안'))
+#                 .Or(lm.ConstraintCollocation(nextWordFirst='아니'))
+#                 .Or(lm.ConstraintCollocation(nextWordFirst='아닌'))
+#         ])
+# jkcGa = lm.regAux('가').tag("JKC").incase([afterVowel,final,
+#         lm.ConstraintCollocation(nextWordFirst='되')
+#                 .Or(lm.ConstraintCollocation(nextWordFirst='된'))
+#                 .Or(lm.ConstraintCollocation(nextWordFirst='안'))
+#                 .Or(lm.ConstraintCollocation(nextWordFirst='아니'))
+#                 .Or(lm.ConstraintCollocation(nextWordFirst='아닌'))
+#         ])
+
 jkcI.after([etnEum, etnM, etnIm])
 jkcGa.after([etnGi ])
 

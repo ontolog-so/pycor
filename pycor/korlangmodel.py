@@ -29,6 +29,7 @@ def buildWithJongsungAux(jongsung):
 ##################################################
 class ConstraintAfterJongsung(lm.Constraint):
     def __init__(self, jongsungs=[]):
+        super().__init__()
         self.jongsungs = set(jongsungs)
         
     def accept(self, wordTokens, worm, prevWord, nextWord):
@@ -44,6 +45,7 @@ class ConstraintAfterJongsung(lm.Constraint):
         
 class ConstraintWithJongsung(lm.Constraint):
     def __init__(self, jongsungs):
+        super().__init__()
         self.jongsungs = set(jongsungs)
         
     def accept(self, wordTokens, worm, prevWord, nextWord):
@@ -89,6 +91,7 @@ class ConstraintAfterNegativeVowel(lm.Constraint):
 
 class ConstraintAfterVowelOrJongsung(lm.Constraint):
     def __init__(self, jongsungs):
+        super().__init__()
         self.jongsungs = set(jongsungs)
 
     def accept(self, wordTokens, worm, prevWord, nextWord):
@@ -109,6 +112,7 @@ class ConstraintFinal(lm.Constraint):
 
 class ConstraintAfter(lm.Constraint):
     def __init__(self, prevs):
+        super().__init__()
         self.prevs = set(prevs)
         
     def accept(self, wordTokens, worm, prevWord, nextWord):
@@ -117,6 +121,7 @@ class ConstraintAfter(lm.Constraint):
 
 class ConstraintMoreThanAfter(lm.Constraint):
     def __init__(self, prevCount):
+        super().__init__()
         self.prevCount = prevCount
         
     def accept(self, wordTokens, worm, prevWord, nextWord):
@@ -124,6 +129,7 @@ class ConstraintMoreThanAfter(lm.Constraint):
 
 class ConstraintLessThanAfter(lm.Constraint):
     def __init__(self, prevCount):
+        super().__init__()
         self.prevCount = prevCount
         
     def accept(self, wordTokens, worm, prevWord, nextWord):
@@ -132,6 +138,7 @@ class ConstraintLessThanAfter(lm.Constraint):
 
 class ConstraintNotAfter(lm.Constraint):
     def __init__(self, prevs):
+        super().__init__()
         self.prevs = set(prevs)
         
     def accept(self, wordTokens, worm, prevWord, nextWord):

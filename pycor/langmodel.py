@@ -102,6 +102,22 @@ regSng("\n","NL")
 
 
 class Constraint:
+    def __init__(self):
+        self.orConsts = []
+    
+    def Or(self, const):
+        self.orConsts.append(const)
+        return self
+    
+    def acceptChain(self, wordTokens, worm, prevWord, nextWord):
+        if self.accept(wordTokens, worm, prevWord, nextWord):
+            return True
+        for orc in self.orConsts:
+            if orc.acceptChain(wordTokens, worm, prevWord, nextWord):
+                return True
+
+        return False
+
     def accept(self, wordTokens, worm, prevWord, nextWord):
         return True
 
@@ -112,10 +128,32 @@ class ConstraintOnlyAfter(Constraint):
 
 class ConstraintAfter(Constraint):
     def __init__(self, prevs):
+        super().__init__()
         self.prevs = set(prevs)
     def accept(self, wordTokens, worm, prevWord, nextWord):
         prevStr = wordTokens.peekPrev()
         return prevStr in self.prevs
+
+
+class ConstraintCollocation(Constraint):
+    def __init__(self, prevWordEnd=None, nextWordFirst=None):
+        super().__init__()
+        self.prevWordEnd = prevWordEnd
+        self.nextWordFirst = nextWordFirst
+
+    def accept(self, wordTokens, worm, prevWord, nextWord):
+        # print("self.prevWordEnd", self.prevWordEnd, "self.nextWordFirst", self.nextWordFirst, "nextWord", nextWord)
+        if self.prevWordEnd :
+            if not prevWord or not prevWord.endswith(self.prevWordEnd):
+                return False
+        # print("prevWordEnd pass" )
+        if self.nextWordFirst:
+            if not nextWord or not nextWord.startswith(self.nextWordFirst):
+                return False
+        # print("nextWordFirst pass" )
+
+        return True
+
 
 onlyAfter = ConstraintOnlyAfter()
 
@@ -223,7 +261,7 @@ class Worm:
         if self.constraints:
             for const in self.constraints:
                 #print("procede ", wordTokens.text, wordTokens.current())
-                if not const.accept(wordTokens, self, prevWord, nextWord) :
+                if not const.acceptChain(wordTokens, self, prevWord, nextWord) :
                     #print('  ', wordTokens.current(), "NO")
                     return False
         return True
@@ -414,29 +452,6 @@ class Aux(Worm):
         return getStems(token)
 
 
-# 같은 token의 Worm묶음
-class CollectiveAux(Aux) :
-    def __init__(self, tokens, worms,  atag=None, precedents = None, constraints = [], 
-        score=0, escapeFirst=True, ambi=False, pos=None):
-        self._set( tokens, atag, precedents, constraints , score, escapeFirst,ambi, pos=pos )
-        self.worms = worms
-        
-    def procede(self,wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord ):
-        if wordTokens.peekPrev() is None:
-            return None
-        
-        curidx = wordTokens.curidx;
-        headtails = []
-        
-        for worm in self.worms:
-            hts = worm.procede(wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord)
-            if hts:
-                headtails.extend( hts )
-                
-            wordTokens.setPos(curidx)
-            
-        return headtails
-
 class MultiSyllablesAux(_MultiSyllablesWorm) :
     def __repr__(self):
         return "MultiSyllablesAux["+ self.syllables +"] " + str(self.atag)
@@ -455,6 +470,7 @@ class MultiSyllablesAux(_MultiSyllablesWorm) :
             token = wordTokens.peekPrev()
         return getStems(token)
 
+    
 ############################################
 # Stem 어간 
 ############################################
@@ -516,7 +532,7 @@ class _InnerStemAux(Worm):
         if self.constraints:
             for const in self.constraints:
                 #print("procede ", wordTokens.text, wordTokens.current())
-                if not const.accept(wordTokens, self, prevWord, nextWord) :
+                if not const.acceptChain(wordTokens, self, prevWord, nextWord) :
                     #print('  ', wordTokens.current(), "NO")
                     return False
         return True

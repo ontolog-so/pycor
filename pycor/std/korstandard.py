@@ -1,8 +1,6 @@
-import sys
-import pycor.langmodel as lm
-import pycor.korlangmodel as klm
-import pycor.std.aux as aux
-import pycor.std.suffix as suf
-import pycor.std.stem as stm
-import pycor.std.single as sng
-import pycor.std.irregular as irr
+import pycor.std.aux 
+import pycor.std.suffix 
+import pycor.std.stem 
+import pycor.std.single 
+import pycor.std.irregular 
+import pycor.std.collocation 

@@ -1,6 +1,6 @@
 
 from pycor import trainer, parser, docresolver, utils, korutils
-import pycor.std.korstandard
+from pycor.std import *
 
 __all__ = ["setmodel", "loadmodel", "savemodel","train", "buildvocab", "readfile", "readtext",
             "trim","trimfile","keywords","keywordsFromText", "setwordlimit", 
@@ -29,7 +29,6 @@ def loadmodel(model_dir):
 
 def savemodel(model_dir):
     _trainer.savemodel(model_dir)
-
 
 def train(data_dir, pattern="*.txt", limit=0):
     """ Load training data """
