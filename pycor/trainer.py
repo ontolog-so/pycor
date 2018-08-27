@@ -50,14 +50,10 @@ class Trainer(parser.SentenceParser) :
 
 
     def checkVocab(self, sentence_array):
-        self.lock.acquire()
-        try:
-            if len(self.wordmap.words) > self.wordsthreshold * self.checkCount:
-                self.checkCount += 1
-                self.buildVocab()
-            return None
-        finally:
-            self.lock.release()
+        if len(self.wordmap.words) > self.wordsthreshold * self.checkCount:
+            self.checkCount += 1
+            self.buildVocab()
+        return None
         
 
     def classifyHeads(self,words):
