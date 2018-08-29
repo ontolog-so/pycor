@@ -3,8 +3,8 @@ from threading import Lock
 from pycor import speechmodel , korutils, parser
 
 
-Y_TAGS0 = set(['EFN','ETN'])
-Y_TAGS1 = set(['EPT-pp','EPT-f','EPT-guess','EFN','EFI','EC-and','EC-to','EC-for'])
+Y_TAGS0 = set(['EFN','ETN','EFQ'])
+Y_TAGS1 = set(['EPT-pp','EPT-f','EPT-guess','EFN','EFI','EC-and','EC-to','EC-for','EC-but'])
 Y_TAGS2 = set(['EPT-pr','ETM'])
 
 C_TAGS1 = set(['JKS','JKP','JKC','JKG','JKB-TO','JKB-FM','JX-from','JKB-AS','JKB-WZ','JKB-LK','JC','JX','JKB-TT|AS|BY',

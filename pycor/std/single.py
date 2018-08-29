@@ -20,6 +20,7 @@ lm.regSng("또는","MAG")
 lm.regSng("서로","MAG")
 lm.regSng("각각","MAG")
 lm.regSng("이미","MAG")
+lm.regSng("듯이","MAG")
 
 lm.regSng("그러나","MAJ")
 lm.regSng("그리고","MAJ")

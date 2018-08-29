@@ -136,10 +136,10 @@ irrB_Ul2 = lm.regAux( klm.IrregularAux('울', headJongsung='ㅂ', tail='을', at
         klm.ConstraintAfter(['나','스','러','서','여','로','다','까','벼' ]), klm.ConstraintMoreThanAfter(1), final ]) )
 
 irrB_Wa = lm.regAux( klm.IrregularAux('와', headJongsung='ㅂ', tail='아', atag="ADJ|V+IRB") ).setpos('Y').incase([
-        klm.ConstraintAfter(['고','도']), klm.ConstraintLessThanAfter(2) ]) 
+        klm.ConstraintAfter(['고','도']), klm.ConstraintLessThanAfter(2) ])
 
 irrB_Wa2 = lm.regAux( klm.IrregularAux('와', headJongsung='ㅂ', tail='아', atag="ADJ|V+IRB") ).setpos('Y').incase([
-        klm.ConstraintAfter(['나','다','까','로' ]), klm.ConstraintMoreThanAfter(1) ]) 
+        klm.ConstraintAfter(['나','다','까','로' ]), klm.ConstraintMoreThanAfter(1) ]).setscore(-1)
 
 irrB_Wat = klm.IrregularAux('왔', headJongsung='ㅂ', tail='았', atag="ADJ|V+IRB").setpos('Y').incase([
         klm.ConstraintAfter(['고','도']), klm.ConstraintLessThanAfter(2)])
@@ -158,6 +158,15 @@ irrB_Weot = klm.IrregularAux('웠', headJongsung='ㅂ', tail='었', atag="ADJ|V+
 
 irrB_Weot2 = klm.IrregularAux('웠', headJongsung='ㅂ', tail='었', atag="ADJ|V+IRB").setpos('Y').incase([
         klm.ConstraintAfter(['나','스','러','서','여','로','다','까','벼' ]), klm.ConstraintMoreThanAfter(1) ]) 
+
+aux.ecNa.after([irrB_Weot2,irrB_Weot,irrB_Wat,irrB_Wat2])
+aux.auxEu.after([irrB_Weot2,irrB_Weot,irrB_Wat,irrB_Wat2])
+aux.auxEo.after([irrB_Weot2,irrB_Weot,irrB_Wat,irrB_Wat2])
+aux.eptNeun.after([irrB_Weot2,irrB_Weot,irrB_Wat,irrB_Wat2])
+
+aux.auxJi.after([irrB_Weot2,irrB_Weot,irrB_Wat,irrB_Wat2])
+aux.ecDo.after([irrB_Weo, irrB_Weo2, irrB_Wa, irrB_Wa2])
+
 
 
 aux.ecMyeon.after( irrB_U )

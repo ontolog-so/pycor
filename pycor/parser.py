@@ -26,10 +26,14 @@ _quoteclues = {
     '［':Quote('［','］'),
     '（':Quote('（','）'),
     '『':Quote('『','』'),
-    '<':Quote('<','>')
-    
+    '<':Quote('<','>')   
     }
- 
+
+def isdigit(text, index):
+    if index<0 or len(text) -1 < index:
+        return False
+    return text[index].isdigit() 
+
 ##################################################
 #  어절 단위 텍스트 커서  
 ##################################################
@@ -352,6 +356,11 @@ class SentenceParser:
                     index +=1 
             else:
                 if ch in ['.','?','!',':',';','\n']:
+                    if ch == '.' and (isdigit(text, index-1) or isdigit(text, index+1)) :
+                        word += ch
+                        index += 1
+                        continue
+
                     #print("end sentence.", ch)
                     word = word.strip()
                     if(len(word) > 0):
