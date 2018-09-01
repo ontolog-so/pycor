@@ -1,6 +1,8 @@
 import re
 from threading import Lock
-from pycor import speechmodel , korutils, parser
+from pycor import korutils, parser
+from pycor import langmodel as lm
+from pycor import speechmodel as sm
 
 
 Y_TAGS0 = set(['EFN','ETN','EFQ'])
@@ -69,6 +71,10 @@ class Trainer(parser.SentenceParser) :
 
                 tags.update(tail.tags)
 
+        tuples = list(headTagsMap.items())
+        for head, tags in  tuples:
+            self.analyzeHead(head, tags, self.wordmap.heads, headTagsMap)
+
         snglist = []
         ylist = []
         clist = []
@@ -77,6 +83,52 @@ class Trainer(parser.SentenceParser) :
             self.classify(head, tags, snglist, ylist, clist, ambilist)
 
         return snglist, ylist, clist, ambilist
+
+    def analyzeHead(self,head, tags,headMap, headTagsMap):
+        headText = head.text
+        length = len(headText)
+
+        if length < 2:
+            return
+            
+        suffixes = lm.getSuffixes(headText[length-1])
+        
+        if suffixes:
+            wordTokens = parser.WordTokens(headText)
+            wordTokens.prev()
+            curindex = wordTokens.curidx
+            for suf in suffixes:
+                wordTokens.setPos(curindex)
+                pairs = suf.procede(wordTokens,None,None,None,None,None)
+                if pairs:
+                    for pair in pairs:
+                        stemHead = headMap.get( pair.head )
+                        if stemHead is None:
+                            stemHead = sm.Head(pair.head)
+                            headMap[pair.head] = stemHead
+
+                        # stemHead.addpos()
+                        if stemHead.score == 0:
+                            stemHead.score = head.score
+
+                        stemHead.occ += head.occ
+                        headTagsMap[stemHead] = set()
+                        head.proto = pair.head
+                        head.addpos(pair.pos)
+
+    # def _analyzeHeadText(self,headText, headMap, headTagsMap, tempHeadBag):
+    #     for index in range(1,len(headText)):
+    #         left = headText[:index]
+    #         right = headText[index:]
+    #         leftHead = headMap.get(left)
+    #         rightHead = headMap.get(right)
+    #         if leftHead:
+    #             tempHeadBag[left] = leftHead
+
+    #         if rightHead:
+    #             tempHeadBag[right] = rightHead
+    #         # else :
+    #         #     self._analyzeHeadText(right, headMap, headTagsMap, tempHeadBag)
 
     def classify(self,head, tags, snglist, ylist, clist, ambilist):
         if len(head.tails) == 0:

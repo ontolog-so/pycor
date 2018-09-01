@@ -5,6 +5,7 @@ POS=['S','O','IO', 'P','V','A','AD','C','CL']
 
 auxmap = {}
 stemmap = {}
+suffixmap = {}
 singlemap = {}
 
 
@@ -82,6 +83,20 @@ def getStems(token):
     return stemmap.get(token)
 
 
+def regSuffix(suffix, atag=None, precedents=None, constraints = None, score=0, escapeFirst=False):
+    if type(suffix) is Suffix or issubclass(type(suffix), Worm):
+        return _putmap2(suffixmap, suffix)
+    elif type(suffix) is list:
+        suffixObj = Suffix(suffix, atag=atag, precedents=precedents, constraints = constraints, score=score, escapeFirst=escapeFirst)
+        return _putmap2(suffixmap, suffixObj)
+    
+    elif type(suffix) is str:
+        suffixObj = Suffix(suffix, atag=atag, precedents=precedents, constraints = constraints, score=score, escapeFirst=escapeFirst)
+        return _putmap2(suffixmap, suffixObj)
+
+# list로 반환 
+def getSuffixes(token):
+    return suffixmap.get(token)
 
 class SingleWord:
     def __init__(self, text, atag=None):
@@ -551,17 +566,10 @@ class Suffix(Worm):
         super().__init__( tokens, atag, precedents , constraints , score, escapeFirst,ambi,pos )
 
     def _procedeImpl(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
-        head = None
-        tail = None
+        head = wordTokens.head()
+        tail = wordTokens.tail()
 
-        if prevPair :
-            head = prevPair.head[:len(prevPair.head)-1]
-            tail = prevPair.head[len(prevPair.head)-1] + prevPair.tail
-        else :
-            head = wordTokens.head()
-            tail = wordTokens.tail()
-        #print("Suffix head=" , head, "tail=", tail)
-        return sm.Pair(head, tail, self.score+1).addtags(self.getTag(prevPair)).addpos(self.pos)
+        return sm.Pair(head, tail, self.score+1).addpos(self.pos)
 
 
     

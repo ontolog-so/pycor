@@ -39,7 +39,7 @@ class Word:
         del self.prevnexts[:]
 
 class Pair:
-    def __init__(self,head,tail, score=0.0, ambi=False):
+    def __init__(self,head, tail, score=0.0, ambi=False):
         self.head = head
         self.tail = tail
         self.score = score
@@ -47,6 +47,9 @@ class Pair:
         self.pos = set()
         self.tags = []
         
+    def __repr__(self) :
+        return str(self.head) + ":" + str(self.tail) 
+    
     def ambiguous(self, ambi=True):
         self.ambi = ambi
         return self
@@ -224,7 +227,7 @@ class WordMap :
     def clearheads(self):
         headlist = list(self.heads.values())
         for head in headlist:
-            if head.score != 0:
+            if head.score != 0 :
                 del(self.heads[head.text])
         print("Clear Heads:", len(self.heads), "remains.")
 
@@ -257,7 +260,7 @@ class WordMap :
             if bhead:
                 for part in list:
                     if part.score:
-                        writer.writerow([part.text, '+'.join(part.pos), part.score, part.occurrence(), part.frequency])
+                        writer.writerow([part.text, '+'.join(part.pos), part.score, part.occurrence(), part.frequency, part.proto])
             else:
                 for part in list:
                     if part.score:
@@ -292,11 +295,14 @@ class WordMap :
                 score = float(row[2])
                 occurrence = int(row[3])
                 frequency = int(row[4])
+                proto = str(row[5])
                 head = Head(text)
                 head.addpos(pos)
                 head.score = score
                 head.occ = occurrence
                 head.frequency = frequency
+                if proto:
+                    head.proto = proto
                 self.heads[text] = head
             csvfile.close()
         print("Load ", path,  "  소요시간:" , round(time.time() - starttime, 3))

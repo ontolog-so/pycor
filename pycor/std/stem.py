@@ -12,8 +12,6 @@ constraintFirst = klm.ConstraintFirst()
 ##################################################
 stemIt = lm.regStem('있', atag='V').setpos('Y')
 stemUp = lm.regStem('없', atag='V').setpos('Y')
-# stemDoe = lm.regStem('되', atag='V').setpos('Y')
-# stemDoe = lm.regStem('하', atag='V').setpos('Y')
 
 npI = lm.regStem("이", atag='NP').incase(constraintFirst).setpos('NP')
 npGeu = lm.regStem("그", atag='NP').incase(constraintFirst).setpos('NP')

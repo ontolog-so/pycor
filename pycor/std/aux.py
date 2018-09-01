@@ -679,7 +679,7 @@ jxNeun = lm.regAux('는').tag("JX-SO").incase([afterVowel,final]).after([etnGi])
 jxN = lm.regAux(klm.JongsungAux(['난,넌,린'], jongsungs="ㄴ")).tag("JX-SO").incase([afterVowel,final])
 jxDo = lm.regAux('도').tag("JX-SO").incase([final])
 
-jxDo.after([jkbESeo,jkbE_at,jkbE_to,jkbEGe,jkbEuRo,jkqGo,efqGa, efqNya, efqJi])
+jxDo.after([jkbESeo,jkbE_at,jkbE_to,jkbEGe,jkbEuRo,jkqGo,efqGa, efqNya, efqJi, etnGi])
 jxNeun.after([efqGa, efqNya, efqJi])
 
 #----------------------------------
