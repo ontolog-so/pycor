@@ -473,8 +473,12 @@ class SentenceParser:
                 if maxPart:
                     if part.score > maxPart.score:
                         maxPart = part
-                    elif (part.score == maxPart.score) and (len(part.tags)>len(maxPart.tags)):
-                        maxPart = part
+                    elif (part.score == maxPart.score) :
+                        if (len(part.tags)>len(maxPart.tags)):
+                            maxPart = part
+                        elif len(part.tags) == len(maxPart.tags) :
+                            if len(part.tail.text) > len(maxPart.tail.text):
+                                maxPart = part
                 else :
                     maxPart = part
             score = (maxPart.score / len(self.wordmap.words))

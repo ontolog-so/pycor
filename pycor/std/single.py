@@ -41,6 +41,7 @@ lm.regSng("다른","MM")
 lm.regSng("같은","MM")
 lm.regSng("어떤","MM")
 lm.regSng("모든","MM")
+lm.regSng("몇가지","MM")
 
 lm.regSng("따라","DN")
 lm.regSng("통한","DN")

@@ -209,15 +209,24 @@ class WordMap :
     def save(self, modelDir):
         self.writeheads(path=modelDir + "/heads.csv")
         self.writetails(path=modelDir + "/tails.csv")
+        self.clearheads()
 
     def load(self, modelDir):
         self.readheads(path=modelDir + "/heads.csv")
         self.readtails(path=modelDir + "/tails.csv")
+        
 
     def clearwords(self):
         print("Clear words size:", len(self.words))
         for word in self.words.values():
             word.clear()
+
+    def clearheads(self):
+        headlist = list(self.heads.values())
+        for head in headlist:
+            if head.score != 0:
+                del(self.heads[head.text])
+        print("Clear Heads:", len(self.heads), "remains.")
 
     #####################################################################
     #  결과 파일 출력 
