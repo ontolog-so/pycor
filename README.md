@@ -1,4 +1,4 @@
-# PyCor 0.0.4
+# PyCor 0.0.5
 
 ## Python Module for Korean Language Processing
 
