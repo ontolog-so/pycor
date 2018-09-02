@@ -19,4 +19,4 @@ suffixGi = lm.regSuffix('기').setpos('C').after([
     ])
 
 suffixDeul = lm.regSuffix('들').setpos('C')
-suffixJeok = lm.regSuffix('들').setpos('C')
+suffixJeok = lm.regSuffix('적').setpos('C')
