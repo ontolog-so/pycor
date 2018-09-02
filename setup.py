@@ -13,7 +13,7 @@ setup(
     author           = 'Ikchan Kwon',
     author_email     = 'ontolog.so@gmail.com',
     url              = 'https://github.com/ontolog-so/pycor',
-    download_url     = 'https://github.com/ontolog-so/pykor/archive/0.0.3.tar.gz',
+    download_url     = 'https://github.com/ontolog-so/pykor/archive/0.0.5.tar.gz',
     install_requires = [ ],
     packages         = find_packages(exclude = ['bisect', 'notebooks', 'samples']),
     keywords         = ['Korean NLP', 'POS Tagger'],
