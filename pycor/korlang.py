@@ -2,11 +2,11 @@
 from pycor import trainer, parser, docresolver, utils, korutils
 from pycor.std import *
 
-__all__ = ["setmodel", "loadmodel", "savemodel","train", "buildvocab", "readfile", "readtext",
-            "trim","trimfile","keywords","keywordsFromText", "setwordlimit", 
+__all__ = ["getmodel", "setmodel", "loadmodel", "loaddic", "savemodel","setresolver", "train", "buildvocab", "readfile", "readtext",
+            "trim","trimfile","__trim", "keywords","keywordsFromText", "setwordlimit", 
             "printSentences", "abstract", "abstractKeywords","totexts"]
 
-ESC_TAGS = set(['MM','DN','NNB', 'PT','QS','QE','QM','VOID','EC','CL','SC'])
+ESC_TAGS = set(['MM','DN','NNB', 'PT','QS','QE','BS','BE' ,'QM','VOID','EC','CL','SC'])
 
 #############################
 # Singletons
@@ -17,9 +17,13 @@ _wordmap = _trainer.wordmap
 _resolver = docresolver.DocResolver()
 _resolver.setwordmap(_wordmap)
 
+
 def setwordlimit(limit):
     _trainer.setwordlimit(limit)
 
+def getmodel():
+    return _wordmap
+    
 def setmodel(wordmap):
     _wordmap = wordmap
     _trainer.setmodel(wordmap)
@@ -27,8 +31,14 @@ def setmodel(wordmap):
 def loadmodel(model_dir):
     _trainer.loadmodel(model_dir)
 
+def loaddic(dic_path):
+    _trainer.loaddic(dic_path)
+    
 def savemodel(model_dir):
     _trainer.savemodel(model_dir)
+
+def setresolver(resolver):
+    _trainer.setresolver(resolver)
 
 def train(data_dir, pattern="*.txt", limit=0):
     """ Load training data """

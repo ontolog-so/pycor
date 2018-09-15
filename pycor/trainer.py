@@ -6,10 +6,11 @@ from pycor import speechmodel as sm
 
 
 Y_TAGS0 = set(['EFN','ETN','EFQ'])
-Y_TAGS1 = set(['EPT-pp','EPT-f','EPT-guess','EFN','EFI','EC-and','EC-to','EC-for','EC-but'])
+Y_TAGS1 = set(['EPT-pp','EPT-f','EPT-guess','EFN','EFI','EC-to','EC-for','EC-but'])
 Y_TAGS2 = set(['EPT-pr','ETM'])
 
-C_TAGS1 = set(['JKS','JKP','JKC','JKG','JKB-TO','JKB-FM','JX-from','JKB-AS','JKB-WZ','JKB-LK','JC','JX','JKB-TT|AS|BY',
+C_TAGS0 = set(['JKS','JKC','JKP'])
+C_TAGS1 = set(['JKG','JKB-TO','JKB-FM','JX-from','JKB-AS','JKB-WZ','JKB-LK','JC','JX','JKB-TT|AS|BY',
                 'EC-evenif','JKG-as','JKB-CM'])
 C_TAGS2 = set(['JKO','JX-SO'])
 C_POS = set(['NP','NNB'])
@@ -50,6 +51,10 @@ class Trainer(parser.SentenceParser) :
         sentence_array = self._loadfile(filepath)
         self.checkVocab(sentence_array)
 
+    # 각 문서별 Scoring 생략 
+    # def resolveDocument(self, sentence_array):
+    #     return None
+ 
 
     def checkVocab(self, sentence_array):
         if len(self.wordmap.words) > self.wordsthreshold * self.checkCount:
@@ -84,7 +89,7 @@ class Trainer(parser.SentenceParser) :
 
         return snglist, ylist, clist, ambilist
 
-    def analyzeHead(self,head, tags,headMap, headTagsMap):
+    def analyzeHead(self,head, tags, headMap, headTagsMap):
         headText = head.text
         length = len(headText)
 
@@ -99,22 +104,23 @@ class Trainer(parser.SentenceParser) :
             curindex = wordTokens.curidx
             for suf in suffixes:
                 wordTokens.setPos(curindex)
-                pairs = suf.procede(wordTokens,None,None,None,None,None)
-                if pairs:
-                    for pair in pairs:
-                        stemHead = headMap.get( pair.head )
-                        if stemHead is None:
-                            stemHead = sm.Head(pair.head)
-                            headMap[pair.head] = stemHead
+                pairs = suf.procede(wordTokens,None,None,None,None,None,head, tags)
 
-                        # stemHead.addpos()
-                        if stemHead.score == 0:
-                            stemHead.score = head.score
+                # if pairs:
+                #     for pair in pairs:
+                #         stemHead = headMap.get( pair.head )
+                #         if stemHead is None:
+                #             stemHead = sm.Head(pair.head)
+                #             headMap[pair.head] = stemHead
+                        
+                #         if stemHead.score == 0:
+                #             stemHead.score = head.score
 
-                        stemHead.occ += head.occ
-                        headTagsMap[stemHead] = set()
-                        head.proto = pair.head
-                        head.addpos(pair.pos)
+                #         stemHead.addpos(suf.protoPos)
+                #         stemHead.occ += head.occ
+                #         headTagsMap[stemHead] = set()
+                #         head.proto = pair.head
+                #         head.addpos(pair.pos)
 
     # def _analyzeHeadText(self,headText, headMap, headTagsMap, tempHeadBag):
     #     for index in range(1,len(headText)):
@@ -141,7 +147,7 @@ class Trainer(parser.SentenceParser) :
                 ambilist.append(head)
             
             yscore = len(tags & Y_TAGS0) * 4 + len(tags & Y_TAGS1) * 3 + len(tags & Y_TAGS2) * 1
-            cscore = len(tags & C_TAGS1) * 3 + len(tags & C_TAGS2) * 2
+            cscore = len(tags & C_TAGS0) * 4 + len(tags & C_TAGS1) * 3 + len(tags & C_TAGS2) * 2
             
             if len(head.pos) == 0:
                 if yscore > cscore:

@@ -108,6 +108,8 @@ class SingleWord:
 
 WORD_QUOTE_START = regSng("[","QS")
 WORD_QUOTE_END = regSng("]","QE")
+BRACKET_START = regSng("(","BS")
+BRACKET_END = regSng(")","BE")
 regSng(".","PT")
 regSng("?","QM")
 regSng("!","EC")
@@ -124,11 +126,11 @@ class Constraint:
         self.orConsts.append(const)
         return self
     
-    def acceptChain(self, wordTokens, worm, prevWord, nextWord):
-        if self.accept(wordTokens, worm, prevWord, nextWord):
+    def acceptChain(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
+        if self.accept(wordTokens, worm, prevWord, nextWord, headObj, tags):
             return True
         for orc in self.orConsts:
-            if orc.acceptChain(wordTokens, worm, prevWord, nextWord):
+            if orc.acceptChain(wordTokens, worm, prevWord, nextWord, headObj, tags):
                 return True
 
         return False
@@ -137,7 +139,7 @@ class Constraint:
         return True
 
 class ConstraintOnlyAfter(Constraint):
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         prevStr = wordTokens.peekPrev()
         return prevStr in worm.precedents
 
@@ -145,9 +147,31 @@ class ConstraintAfter(Constraint):
     def __init__(self, prevs):
         super().__init__()
         self.prevs = set(prevs)
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         prevStr = wordTokens.peekPrev()
         return prevStr in self.prevs
+
+# 접미사 제약 사항 : ~tag가 포함되지 않는 경우에만 
+class ConstraintSuffixWithoutTags(Constraint):
+    def __init__(self, tags):
+        super().__init__()
+        self.tags = set(tags)
+
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
+        if tags is None:
+            return True
+        return len(tags & self.tags) == 0
+
+# 접미사 제약 사항 : ~tag가 포함되는 경우에만 
+class ConstraintSuffixWithTags(Constraint):
+    def __init__(self, tags):
+        super().__init__()
+        self.tags = set(tags)
+
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
+        if tags is None:
+            return False
+        return len(tags & self.tags) > 0
 
 
 class ConstraintCollocation(Constraint):
@@ -156,7 +180,7 @@ class ConstraintCollocation(Constraint):
         self.prevWordEnd = prevWordEnd
         self.nextWordFirst = nextWordFirst
 
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         # print("self.prevWordEnd", self.prevWordEnd, "self.nextWordFirst", self.nextWordFirst, "nextWord", nextWord)
         if self.prevWordEnd :
             if not prevWord or not prevWord.endswith(self.prevWordEnd):
@@ -269,20 +293,20 @@ class Worm:
     def isOnlyAfter(self):
         return onlyAfter in self.constraints
     
-    def _checkConstraints(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
+    def _checkConstraints(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord, headObj, tags):
         if wordTokens.peekPrev() is None and self.escapeFirst:
             return False
         
         if self.constraints:
             for const in self.constraints:
                 #print("procede ", wordTokens.text, wordTokens.current())
-                if not const.acceptChain(wordTokens, self, prevWord, nextWord) :
+                if not const.acceptChain(wordTokens, self, prevWord, nextWord, headObj, tags) :
                     #print('  ', wordTokens.current(), "NO")
                     return False
         return True
 
-    def procede(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord ):
-        if not self._checkConstraints(wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord) :
+    def procede(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord, headObj = None, tags=None ):
+        if not self._checkConstraints(wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord,headObj, tags) :
             return None
         
         headtails = []
@@ -412,7 +436,7 @@ class _MultiSyllablesWorm(Worm) :
         raise Exception("_MultiSyllablesWorm cannot getPrecedent")
     
     # Consume tokens to Last
-    def _checkConstraints(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
+    def _checkConstraints(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord,headObj, tags):
         fromIdx = wordTokens.curidx - len(self.syllables)+1
         if fromIdx < 0:
             return False
@@ -424,10 +448,10 @@ class _MultiSyllablesWorm(Worm) :
 
         wordTokens.setPos(fromIdx)
 
-        return self.first._checkConstraints(wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord)
+        return self.first._checkConstraints(wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord,headObj, tags)
 
-    def procede(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord ):
-        if not self._checkConstraints(wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord) :
+    def procede(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord, headObj = None, tags=None ):
+        if not self._checkConstraints(wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord, headObj, tags) :
             return None
         # 마지막 음절까지 이동한 상태 
         return self.first.procede(wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord)
@@ -538,7 +562,7 @@ class _InnerStemAux(Worm):
             self.excape.append(escps)
         return self
 
-    def _checkConstraints(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
+    def _checkConstraints(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord, headObj, tags):
         if wordTokens.peekPrev() is None and self.escapeFirst:
             return False
         elif (wordTokens.head() in self.excape):
@@ -564,12 +588,17 @@ class Suffix(Worm):
     def __init__(self, tokens, atag=None, precedents=None, constraints = None, 
         score=0, escapeFirst=True, ambi=False, pos=None):
         super().__init__( tokens, atag, precedents , constraints , score, escapeFirst,ambi,pos )
+        self.protoPos = None
+
 
     def _procedeImpl(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
         head = wordTokens.head()
         tail = wordTokens.tail()
-
+        
         return sm.Pair(head, tail, self.score+1).addpos(self.pos)
 
 
+    def setProtoPos(self, pos):
+        self.protoPos = pos
+        return self
     

@@ -148,13 +148,13 @@ irrB_Wat2 = klm.IrregularAux('왔', headJongsung='ㅂ', tail='았', atag="ADJ|V+
         klm.ConstraintAfter(['나','다','까','로' ]), klm.ConstraintMoreThanAfter(1)])
         
 irrB_Weo = lm.regAux( klm.IrregularAux('워', headJongsung='ㅂ', tail='어', atag="ADJ|V+IRB") ).setpos('Y').incase([
-        klm.ConstraintAfter(['더','주','구','고','도' ]) ]) 
+        klm.ConstraintAfter(['더','주','구','고','도','누','겨' ]) ]) 
 
 irrB_Weo2 = lm.regAux( klm.IrregularAux('워', headJongsung='ㅂ', tail='어', atag="ADJ|V+IRB") ).setpos('Y').incase([
         klm.ConstraintAfter(['나','스','러','서','여','로','다','까','벼' ]), klm.ConstraintMoreThanAfter(1) ]) 
 
 irrB_Weot = klm.IrregularAux('웠', headJongsung='ㅂ', tail='었', atag="ADJ|V+IRB").setpos('Y').incase([
-        klm.ConstraintAfter(['더','주','구','고','도','누' ]) ]) 
+        klm.ConstraintAfter(['더','주','구','고','도','누','겨' ]) ]) 
 
 irrB_Weot2 = klm.IrregularAux('웠', headJongsung='ㅂ', tail='었', atag="ADJ|V+IRB").setpos('Y').incase([
         klm.ConstraintAfter(['나','스','러','서','여','로','다','까','벼' ]), klm.ConstraintMoreThanAfter(1) ]) 

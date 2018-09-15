@@ -32,7 +32,7 @@ class ConstraintAfterJongsung(lm.Constraint):
         super().__init__()
         self.jongsungs = set(jongsungs)
         
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         prevStr = wordTokens.peekPrev()
         if korutils.isKor(prevStr):
             first,vowel,final = korutils.decompose(prevStr)
@@ -48,7 +48,7 @@ class ConstraintWithJongsung(lm.Constraint):
         super().__init__()
         self.jongsungs = set(jongsungs)
         
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         curStr = wordTokens.current()
         if korutils.isKor(curStr):
             first,vowel,final = korutils.decompose(curStr)
@@ -57,7 +57,7 @@ class ConstraintWithJongsung(lm.Constraint):
             return False
         
 class ConstraintAfterVowel(lm.Constraint):
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         prevStr = wordTokens.peekPrev()
         
         if korutils.isKor(prevStr):
@@ -68,7 +68,7 @@ class ConstraintAfterVowel(lm.Constraint):
             return True
 
 class ConstraintAfterPositiveVowel(lm.Constraint):
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         prevStr = wordTokens.peekPrev()
         
         if korutils.isKor(prevStr):
@@ -79,7 +79,7 @@ class ConstraintAfterPositiveVowel(lm.Constraint):
             return False
 
 class ConstraintAfterNegativeVowel(lm.Constraint):
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         prevStr = wordTokens.peekPrev()
         
         if korutils.isKor(prevStr):
@@ -94,7 +94,7 @@ class ConstraintAfterVowelOrJongsung(lm.Constraint):
         super().__init__()
         self.jongsungs = set(jongsungs)
 
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         prevStr = wordTokens.peekPrev()
         
         if korutils.isKor(prevStr):
@@ -106,7 +106,7 @@ class ConstraintAfterVowelOrJongsung(lm.Constraint):
 
 
 class ConstraintFinal(lm.Constraint):
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         return wordTokens.peekNext() is None
 
 
@@ -115,7 +115,7 @@ class ConstraintAfter(lm.Constraint):
         super().__init__()
         self.prevs = set(prevs)
         
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         prevStr = wordTokens.peekPrev()
         return ( prevStr in self.prevs )
 
@@ -124,7 +124,7 @@ class ConstraintMoreThanAfter(lm.Constraint):
         super().__init__()
         self.prevCount = prevCount
         
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         return ( wordTokens.curidx > self.prevCount )
 
 class ConstraintLessThanAfter(lm.Constraint):
@@ -132,7 +132,7 @@ class ConstraintLessThanAfter(lm.Constraint):
         super().__init__()
         self.prevCount = prevCount
         
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         return ( wordTokens.curidx < self.prevCount )
 
 
@@ -141,14 +141,14 @@ class ConstraintNotAfter(lm.Constraint):
         super().__init__()
         self.prevs = set(prevs)
         
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         prevStr = wordTokens.peekPrev()
         return not( prevStr in self.prevs )
 
 
 # 첫 음절인 경우에만 
 class ConstraintFirst(lm.Constraint):
-    def accept(self, wordTokens, worm, prevWord, nextWord):
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
         prevStr = wordTokens.peekPrev()
         #print("ConstraintFirst ", wordTokens.current(), prevStr, wordTokens.tail())
         return prevStr is None

@@ -159,8 +159,7 @@ class Keyword(Head):
 #  Tail
 ########################
 class Tail():
-    def __init__(self, token, text):
-        self.token = token
+    def __init__(self, text):
         self.text = text
         self.score = 0.0
         self.occ = 0
@@ -188,7 +187,7 @@ class Tail():
                 self.tags.add(tags)
         return self
     
-_VOID_Tail = Tail(u'','')  
+_VOID_Tail = Tail(u'')  
 
 ########################
 #  단어 정보 및 처리 객체 
@@ -209,6 +208,40 @@ class WordMap :
             self.words[text] = word
         return word
     
+    # 명사, 부사 등 조사/어미가 없는 단일 단어 등록  
+    def registerKeyword(self, text, pos):
+        word = self.words.get(text)
+        if word is None:
+            word = Word(text)
+            head = self.getOrNewHead(text)
+            head.addpos(pos)
+            pair = word.addPair(Pair(head,_VOID_Tail))
+            word.bestpair = pair
+            self.words[text] = word
+        elif word.bestpair:
+            if word.bestpair.tail != _VOID_Tail:
+                head = self.getOrNewHead(text)
+                head.addpos(pos)
+                pair = word.addPair(Pair(head,_VOID_Tail))
+                word.bestpair = pair
+        else:
+            for pair in word.particles:
+                if pair.tail == _VOID_Tail:
+                    word.bestpair = pair
+                    return word
+            head = self.getOrNewHead(text)
+            head.addpos(pos)
+            pair = word.addPair(Pair(head,_VOID_Tail))
+            word.bestpair = pair
+        return word
+    
+    def getOrNewHead(self, text):
+        head = self.heads.get(text)
+        if head is None:
+            head = Head(text)
+            self.heads[text] = head
+        return head
+
     def save(self, modelDir):
         self.writeheads(path=modelDir + "/heads.csv")
         self.writetails(path=modelDir + "/tails.csv")
@@ -292,10 +325,23 @@ class WordMap :
             for row in reader:
                 text = row[0]
                 pos = row[1].split('+')
-                score = float(row[2])
-                occurrence = int(row[3])
-                frequency = int(row[4])
-                proto = str(row[5])
+                score = 1
+                occurrence = 10
+                frequency = 1
+                proto = None
+
+                length = len(row)
+
+                if length>2:
+                    score = float(row[2])
+                    occurrence = int(score * 10)
+                    if length > 3:
+                        occurrence = int(row[3])
+                        if length > 4:
+                            frequency = int(row[4])
+                            if length > 5:
+                                proto = str(row[5])
+
                 head = Head(text)
                 head.addpos(pos)
                 head.score = score
@@ -319,7 +365,7 @@ class WordMap :
                 tags = row[1].split('+')
                 score = float(row[2])
                 occurrence = int(row[3])
-                tail = Tail(text[len(text)-1], text)
+                tail = Tail(text)
                 tail.addtags(tags)
                 tail.score = score
                 tail.occ = occurrence

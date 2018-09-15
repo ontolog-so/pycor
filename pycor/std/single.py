@@ -57,6 +57,8 @@ lm.regSng("수","DN")
 lm.regSng("것","DN")
 lm.regSng("곳","DN")
 lm.regSng("때문","DN")
+lm.regSng("만큼","DN")
+lm.regSng("만치","DN")
 
 
 

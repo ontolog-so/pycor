@@ -179,6 +179,12 @@ class WordParser:
             self.digest_pair(None, wordObj, pair)
             pair.head.addpos(sng.atag)
         else :
+            # v0.0.6
+            if word in self.wordmap.heads:
+                head = self.wordmap.heads[word]
+                if head.score>0:
+                    pair = sm.Pair(word, None)
+                    self.digest_pair(None, wordObj, pair)
             tokens = WordTokens(word)
             self.bisect(tokens, wordObj, prevWord, nextWord)
             
@@ -248,7 +254,13 @@ class WordParser:
         return head
 
     def buildtail(self, text):
-        tail = sm.Tail(text, text)
+        tail = None
+
+        if len(text) == 0:
+            tail = sm._VOID_Tail
+        else :
+            tail = sm.Tail(text)
+            
         self.wordmap.tails[text] = tail
         return tail
     
@@ -261,6 +273,7 @@ class SentenceParser:
     def __init__(self, wordparser=WordParser(), quoteclues=_quoteclues, wordMap=None):
         self._initimpl(wordparser, quoteclues, wordMap)
         self.verbose = False
+        self.resolver = None
         
     def _initimpl(self, wordparser, quoteclues, wordMap=None):
         if wordMap is None:
@@ -270,6 +283,9 @@ class SentenceParser:
         self.quoteclues = quoteclues
         wordparser.wordmap = self.wordmap
     
+    def setresolver(self, resolver):
+        self.resolver = resolver
+
     def setmodel(self, wordMap):
         self.wordmap = wordMap
         self.wordparser.wordmap = self.wordmap
@@ -302,6 +318,10 @@ class SentenceParser:
     def loadmodel(self, path):
         print("Loading Model from",path)
         self.wordmap.load(path)
+
+    def loaddic(self, dic_path):
+        print("Loading Dictionary from",dic_path)
+        self.wordmap.readheads(dic_path)
 
     ########################
     #  Read all Document  
@@ -348,9 +368,14 @@ class SentenceParser:
 
                 if end > index:
                     arr = self.readrow(text[index+1:end])
-                    words_array.append("[")
+                    bracket1 = "["
+                    bracket2 = "]"
+                    if ch == '(':
+                        bracket1 = "("
+                        bracket2 = ")"
+                    words_array.append(bracket1)
                     words_array.extend(arr)
-                    words_array.append("]")
+                    words_array.append(bracket2)
                     index = end +1
                 else:
                     index +=1 
@@ -427,6 +452,9 @@ class SentenceParser:
 
     def resolveDocument(self, sentence_array):
         words_array = self.scoreDocument(sentence_array)
+        if self.resolver:
+            for sentence in sentence_array:
+                self.resolver.resolveSentence(sentence)
         return words_array
 
     def scoreDocument(self, sentence_array) :
@@ -438,16 +466,20 @@ class SentenceParser:
         
     def scoreSentence(self, sentence) :
         words = []
-        for word in sentence.words:
+
+        for index, word in enumerate(sentence.words):
             if type(word) is sm.Sentence:
                 words.extend(self.scoreSentence(word))
             else :
-                self.scoreword(word)
+                prevWords = sentence.words[:index]
+                nextWords = sentence.words[index+1:]
+                self.scoreword(word, prevWords, nextWords)
                 words.append(word)
+        
         return words
 
 
-    def scoreword(self, word) :
+    def scoreword(self, word, prevWords=None, nextWords=None) :
         if word.bestpair:
             return
 
@@ -457,18 +489,20 @@ class SentenceParser:
                 if part.head == sm._VOID_Head:
                     part.addpos("VOID")
                 
-                score = part.score * 2
+                # score = part.score * 2
+                score = part.score
+
                 hs = 0
                 ts = 0
 
-                hs = part.head.occurrence()
-                if score<0:
-                    hs = hs * 1.3
-
+                hs = part.head.occurrence() + part.head.score
+                hs = hs * 1.3
+                
                 if part.tail:
                     ts = part.tail.occurrence()
                 
-                part.score = hs - (ts*0.09) + (score * 10)
+                # part.score = hs - (ts*0.09) + (score * 10)
+                part.score = hs - (ts*0.09) + score
 
                 if maxPart:
                     if part.score > maxPart.score:
@@ -481,7 +515,9 @@ class SentenceParser:
                                 maxPart = part
                 else :
                     maxPart = part
+                    
             score = (maxPart.score / len(self.wordmap.words))
+
             if maxPart.head:
                 maxPart.head.score += score
             if maxPart.tail:
