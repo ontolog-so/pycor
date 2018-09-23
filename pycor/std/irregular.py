@@ -84,11 +84,9 @@ irrR_JaR = klm.TransformedStem('잘','자르', atag="V+IRR+AMBI", score=1).incas
 auxIrrLa = lm.regAux('라').incase(lm.onlyAfter).setpos('Y').after([
         irrR_MoR,irrR_MaR,irrR_DaR,irrR_SaR, irrR_BaR,irrR_GaR,irrR_NaR, irrR_JaR
         ])
-auxIrrLat = lm.regAux('랐').incase(lm.onlyAfter).setpos('Y').after([
+auxIrrLat = lm.Aux('랐').incase(lm.onlyAfter).setpos('Y').after([
         irrR_MoR,irrR_MaR,irrR_DaR,irrR_SaR, irrR_BaR,irrR_GaR,irrR_NaR, irrR_JaR
         ])
-aux.ecSeo.after(auxIrrLa)
-aux.ecGo.after(auxIrrLat)
 
 irrR_GuR = klm.TransformedStem('굴','구르', atag="V+IRR+AMBI", score=1).incase(first)
 irrR_NuR = klm.TransformedStem('눌','누르', atag="V+IRR+AMBI", score=1).incase(first)
@@ -102,12 +100,28 @@ auxIrrLeo = lm.regAux('러').incase(lm.onlyAfter).setpos('Y').after([
         irrR_GuR,irrR_NuR,irrR_BuR,irrR_MuR,irrR_ByeoR,irrR_YiR, irrR_JiR
         ])
         
-auxIrrLeot = lm.regAux('렀').incase(lm.onlyAfter).setpos('Y').after([
+auxIrrLeot = lm.Aux('렀').incase(lm.onlyAfter).setpos('Y').after([
         irrR_GuR,irrR_NuR,irrR_BuR,irrR_MuR,irrR_ByeoR,irrR_YiR, irrR_JiR
         ])
         
-aux.ecSeo.after(auxIrrLeo)
-aux.ecGo.after(auxIrrLeot)
+aux.ecSeo.after([auxIrrLa,auxIrrLeo])
+aux.ecDo.after([auxIrrLa,auxIrrLeo])
+aux.ecSeo.after([auxIrrLa,auxIrrLeo])
+
+
+aux.efnDa.after([auxIrrLat,auxIrrLeot])
+aux.ecGo.after([auxIrrLat,auxIrrLeot])
+aux.ecNa.after([auxIrrLat,auxIrrLeot])
+aux.auxEu.after([auxIrrLat,auxIrrLeot])
+aux.auxEo.after([auxIrrLat,auxIrrLeot])
+aux.eptNeun.after([auxIrrLat,auxIrrLeot])
+aux.auxJi.after([auxIrrLat,auxIrrLeot])
+aux.eppSeupNi.after([auxIrrLat,auxIrrLeot])
+aux.eptNeun.after([auxIrrLat,auxIrrLeot])
+aux.eptDeon.after([auxIrrLat,auxIrrLeot])
+aux.ecJiMan.after([auxIrrLat,auxIrrLeot])
+
+
 ##################################################
 # <ㅂ 불규칙 동사/형용사>
 # <모음조화에 따라 /ㅜ/로 바뀌는 경우>
@@ -167,8 +181,6 @@ aux.eptNeun.after([irrB_Weot2,irrB_Weot,irrB_Wat,irrB_Wat2])
 aux.auxJi.after([irrB_Weot2,irrB_Weot,irrB_Wat,irrB_Wat2])
 aux.ecDo.after([irrB_Weo, irrB_Weo2, irrB_Wa, irrB_Wa2])
 
-
-
 aux.ecMyeon.after( irrB_U )
 aux.ecMyeo.after( irrB_U )
 aux.ecSeo.after([irrB_Wa,irrB_Wa2, irrB_Weo, irrB_Weo2])
@@ -180,3 +192,4 @@ aux.eptNeun.after([irrB_Wat,irrB_Wat2, irrB_Weot,irrB_Weot2])
 aux.eptDeon.after([irrB_Wat,irrB_Wat2, irrB_Weot,irrB_Weot2])
 aux.auxJi.after([irrB_Wa,irrB_Wa2, irrB_Weo, irrB_Weo2, irrB_Wat,irrB_Wat2, irrB_Weot,irrB_Weot2])
 aux.ecJiMan.after([irrB_Wa,irrB_Wa2, irrB_Weo, irrB_Weo2, irrB_Wat,irrB_Wat2, irrB_Weot,irrB_Weot2])
+
