@@ -1,10 +1,14 @@
-# PyCor 0.0.5
+# PyCor 0.0.6
 
 ## Python Module for Korean Language Processing
-
-* 사전(Dictionary)을 미리 등록하지 않고 사용할 수 있는 형태소분석기
+### NLCP : Natural Language Contextual Parsing
+* Corpus기반 사전 학습, Dictionary 없이 한국어 형태소 분석이 가능한 자연어 파서
 * 문장들을 처리하는 과정에서 Dictionary를 스스로 만드는 형태소분석기 
-* WordCount를 이용한 키워드 추출 
+* 한정된 문법형태소의 결합 규칙과 문서 혹은 문서 집합 안에서의 체언, 용언의 활용형태 분석
+* 문장 단위, Document단위, Document set단위로 컨텍스트 생성, 자연어 파싱
+* 제약 조건 : 기본적인 한국어 맞춤법을 지키는 정규화된 한글 문서에 적합(위키, 논문, 뉴스 기사 등)
+* 목적 : 체계적인 지식을 기술한 문서의 파싱과 이해
+
 
 ### Install
 ```

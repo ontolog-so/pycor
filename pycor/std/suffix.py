@@ -15,7 +15,9 @@ suffixHa = lm.regSuffix('하').setpos('Y').setProtoPos('C').incase(yongEonConsts
 suffixHa = lm.regSuffix('받').setpos('Y').setProtoPos('C')
 suffixSiKi = lm.regSuffix('키').setpos('Y').after(lm.Suffix('시').setpos('Y').setProtoPos('C'))
 # TODO ~해지 --> 해 / 지 수정 필요 
-suffixJi = lm.regSuffix('지').incase(yongEonConsts).setpos('Y').setProtoPos('Y').after(aux.auxHae)
+suffixJi = lm.regSuffix('지').incase(yongEonConsts).incase(lm.onlyAfter).setpos('Y').setProtoPos('Y').after([
+    aux.auxHae,aux.auxA, aux.auxEo
+    ])
 
 sufGe = lm.Suffix('게').after([suffixHa,suffixDoe,suffixJi])
 suffixDoe.after(sufGe)

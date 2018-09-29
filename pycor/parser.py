@@ -1,7 +1,7 @@
 import re
 import os
 import pycor.speechmodel as sm
-from pycor import langmodel, korutils , docresolver
+from pycor import langmodel, korutils, scoring
 
 class Quote:
     def __init__(self,start,end):
@@ -27,6 +27,13 @@ _quoteclues = {
     '（':Quote('（','）'),
     '『':Quote('『','』'),
     '<':Quote('<','>')   
+    }
+
+_equivalentclues = {
+    '(':Quote('(',')'),
+    '[':Quote('[',']'),
+    '［':Quote('［','］'),
+    '（':Quote('（','）') 
     }
 
 def isdigit(text, index):
@@ -160,7 +167,6 @@ class WordParser:
     def __init__(self, auxmap = langmodel.auxmap, singlemap=langmodel.singlemap):
         self.auxmap = auxmap
         self.singlemap = singlemap
-        self.wordmap = None
         
     def getAuxs(self, token):
         return langmodel.getAuxs(token)
@@ -170,25 +176,35 @@ class WordParser:
         
     def getSuffixs(self, token):
         return langmodel.getSuffixs(token)
+    
+    def getword(self, text, prev, nxt,  wordmap):
+        word = wordmap.getword(text)
+        if word is None:
+            word = sm.Word(text)
+            self.digest_word(word, prev, nxt, wordmap)
+            wordmap.addword(word)
         
-    def digest_word(self, wordObj, prevWord, nextWord):
+        return word
+
+
+    def digest_word(self, wordObj, prevWord, nextWord, wordmap):
         word = wordObj.text
         if word in self.singlemap:
             sng = self.singlemap[word]
             pair = sm.Pair(word, None).addpos(sng.atag).addtags(sng.atag)
-            self.digest_pair(None, wordObj, pair)
+            self.digest_pair(None, wordObj, pair, wordmap)
             pair.head.addpos(sng.atag)
         else :
             # v0.0.6
-            if word in self.wordmap.heads:
-                head = self.wordmap.heads[word]
+            if word in wordmap.heads:
+                head = wordmap.heads[word]
                 if head.score>0:
                     pair = sm.Pair(word, None)
-                    self.digest_pair(None, wordObj, pair)
+                    self.digest_pair(None, wordObj, pair, wordmap)
             tokens = WordTokens(word)
-            self.bisect(tokens, wordObj, prevWord, nextWord)
+            self.bisect(tokens, wordObj, prevWord, nextWord, wordmap)
             
-    def bisect(self, wordTokens, wordObj, prevWord, nextWord, cascade=True):
+    def bisect(self, wordTokens, wordObj, prevWord, nextWord, wordmap):
         token = wordTokens.prev()
         if token:
             pairs = []
@@ -207,34 +223,31 @@ class WordParser:
                 pairs.append(pair)
             
             for pair in pairs:
-                self.digest_pair(wordTokens, wordObj, pair)
-
-        elif cascade :
-            self.digest_pair( wordObj, sm.Pair(wordObj.text, None) ) 
+                self.digest_pair(wordTokens, wordObj, pair, wordmap)
 
             
     ###################################### 
     #  Head, Tail 처리 
     ######################################         
-    def digest_pair(self, wordTokens, wordObj, pair):
+    def digest_pair(self, wordTokens, wordObj, pair, wordmap):
         if pair is None or pair.head is None:
             #헤드 값이 없으면 그냥 skip
             return
         
         
         h = pair.head.upper() # 영문의 경우 대문자로 변화 
-        head = self.wordmap.heads.get(h)
+        head = wordmap.heads.get(h)
         if head is None:
-            head = self.buildhead(wordTokens, h)
+            head = self.buildhead(wordTokens, h, wordmap)
             
         head.freq()
         tail = sm._VOID_Tail
         
         if pair.tail:
             t = pair.tail.upper() # 영문의 경우 대문자로 변화 
-            tail = self.wordmap.tails.get(t)
+            tail = wordmap.tails.get(t)
             if tail is None:
-                tail = self.buildtail(t)
+                tail = self.buildtail(t, wordmap)
 
             head.appendtail(tail)
             tail.appendhead(head)
@@ -244,16 +257,16 @@ class WordParser:
         wordObj.addPair(pair)
 
         
-    def buildhead(self, wordTokens, text):
+    def buildhead(self, wordTokens, text, wordmap):
         head = None
         if len(text) == 0:
             head = sm._VOID_Head
         else:
             head = sm.Head(text)
-            self.wordmap.heads[text] = head
+            wordmap.heads[text] = head
         return head
 
-    def buildtail(self, text):
+    def buildtail(self, text, wordmap):
         tail = None
 
         if len(text) == 0:
@@ -261,7 +274,7 @@ class WordParser:
         else :
             tail = sm.Tail(text)
             
-        self.wordmap.tails[text] = tail
+        wordmap.tails[text] = tail
         return tail
     
     
@@ -270,30 +283,39 @@ class WordParser:
 #  Class : SentenceParser
 #################################################
 class SentenceParser:
-    def __init__(self, wordparser=WordParser(), quoteclues=_quoteclues, wordMap=None):
-        self._initimpl(wordparser, quoteclues, wordMap)
+    def __init__(self, wordparser=WordParser(), quoteclues=_quoteclues, equivalentclues=_equivalentclues , 
+        scorefunction=scoring.default_scorepair, wordMap=None):
+        self._initimpl(wordparser, quoteclues, equivalentclues, scorefunction, wordMap)
         self.verbose = False
-        self.resolver = None
+        self.resolvers = []
         
-    def _initimpl(self, wordparser, quoteclues, wordMap=None):
+    def _initimpl(self, wordparser, quoteclues, equivalentclues, scorefunction, wordMap=None):
         if wordMap is None:
-            wordMap = sm.WordMap(wordparser)
+            wordMap = sm.WordMap()
         self.wordmap = wordMap
+        self.scorefunction = scorefunction
         self.wordparser = wordparser
         self.quoteclues = quoteclues
-        wordparser.wordmap = self.wordmap
-    
-    def setresolver(self, resolver):
-        self.resolver = resolver
+        self.equivalentclues = equivalentclues
+        
+    def addresolver(self, resolver):
+        self.resolvers.append(resolver)
+
+    def removeresolver(self, resolver):
+        self.resolvers.remove(resolver)
 
     def setmodel(self, wordMap):
         self.wordmap = wordMap
-        self.wordparser.wordmap = self.wordmap
-        self.wordmap.wordparser = wordparser
-    
-    def loadfile(self, path):
+
+
+    def resolveword(self, text):
+        word = self.wordparser.getword(text, None, None,  self.wordmap)
+        self.scoreword(word)
+        return word
+
+    def loadfile(self, path, context=None):
         sentence_array = self._loadfile(path)
-        words_array = self.resolveDocument(sentence_array)
+        words_array = self.resolveDocument(sentence_array, context)
         return sentence_array, words_array
     
     def _loadfile(self, path):
@@ -326,7 +348,7 @@ class SentenceParser:
     ########################
     #  Read all Document  
     ########################
-    def readtext(self, text):
+    def readtext(self, text, context=None):
         """
         return Document : sentence_array, words_array
         """
@@ -337,7 +359,7 @@ class SentenceParser:
                 self._readrow(row,sentence_array,words_array)  
                 words_array.clear()
         
-        words_array = self.resolveDocument(sentence_array)
+        words_array = self.resolveDocument(sentence_array,context)
         return sentence_array, words_array
 
     ########################
@@ -368,14 +390,16 @@ class SentenceParser:
 
                 if end > index:
                     arr = self.readrow(text[index+1:end])
-                    bracket1 = "["
-                    bracket2 = "]"
-                    if ch == '(':
-                        bracket1 = "("
-                        bracket2 = ")"
-                    words_array.append(bracket1)
-                    words_array.extend(arr)
-                    words_array.append(bracket2)
+                    
+                    if ch in self.equivalentclues:
+                        if len(arr) > 1:
+                            words_array.extend(arr)
+                        elif len(arr) == 1:
+                            arr[0].senttype = sm.SENTENCE_TYPE_EQUIV
+                            words_array.append(arr[0])
+                    else:
+                        words_array.extend(arr)
+
                     index = end +1
                 else:
                     index +=1 
@@ -443,19 +467,25 @@ class SentenceParser:
             
             windex += 1
         
-        
         return sentence
 
     def _getword(self, text, prev, nxt):
-        word = self.wordmap.getword(text, prev, nxt)
+        word = self.wordparser.getword(text, prev, nxt,self.wordmap)
         return word
 
-    def resolveDocument(self, sentence_array):
+    def resolveDocument(self, sentence_array, context=None):
         words_array = self.scoreDocument(sentence_array)
-        if self.resolver:
-            for sentence in sentence_array:
-                self.resolver.resolveSentence(sentence)
+
+        self._doresolver(sentence_array, context)
+
         return words_array
+
+    def _doresolver(self, sentence_array, context=None):
+        if context is None:
+            context = self.wordmap
+            
+        for resolver in self.resolvers:
+            resolver.resolveDocument(sentence_array, context)
 
     def scoreDocument(self, sentence_array) :
         words_array = []
@@ -478,7 +508,6 @@ class SentenceParser:
         
         return words
 
-
     def scoreword(self, word, prevWords=None, nextWords=None) :
         if word.bestpair:
             return
@@ -486,24 +515,8 @@ class SentenceParser:
         if len(word.particles) > 0:
             maxPart = None
             for part in word.particles:
-                if part.head == sm._VOID_Head:
-                    part.addpos("VOID")
+                self.scorefunction(part, word, self.wordmap)
                 
-                # score = part.score * 2
-                score = part.score
-
-                hs = 0
-                ts = 0
-
-                hs = part.head.occurrence() + part.head.score
-                hs = hs * 1.3
-                
-                if part.tail:
-                    ts = part.tail.occurrence()
-                
-                # part.score = hs - (ts*0.09) + (score * 10)
-                part.score = hs - (ts*0.09) + score
-
                 if maxPart:
                     if part.score > maxPart.score:
                         maxPart = part
@@ -516,8 +529,9 @@ class SentenceParser:
                 else :
                     maxPart = part
                     
-            score = (maxPart.score / len(self.wordmap.words))
-
+            # score = (maxPart.score / len(self.wordmap.words))
+            score = maxPart.score
+            
             if maxPart.head:
                 maxPart.head.score += score
             if maxPart.tail:

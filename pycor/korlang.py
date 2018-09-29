@@ -1,10 +1,11 @@
 
-from pycor import trainer, parser, docresolver, utils, korutils
+from pycor import trainer, parser, keywordutils, utils, korutils, resolver
 from pycor.std import *
 
-__all__ = ["getmodel", "setmodel", "loadmodel", "loaddic", "savemodel","setresolver", "train", "buildvocab", "readfile", "readtext",
+__all__ = ["getmodel", "setmodel", "loadmodel", "loaddic", "savemodel","addresolver", "removeresolver",
+            "train", "buildvocab", "readfile", "readtext", "resolveword", "setscorefunction",
             "trim","trimfile","__trim", "keywords","keywordsFromText", "setwordlimit", 
-            "printSentences", "abstract", "abstractKeywords","totexts"]
+            "printSentences", "abstract", "abstractKeywords","totexts", "registerKeyword"]
 
 ESC_TAGS = set(['MM','DN','NNB', 'PT','QS','QE','BS','BE' ,'QM','VOID','EC','CL','SC'])
 
@@ -14,8 +15,8 @@ ESC_TAGS = set(['MM','DN','NNB', 'PT','QS','QE','BS','BE' ,'QM','VOID','EC','CL'
 _trainer = trainer.Trainer()
 _wordmap = _trainer.wordmap
 
-_resolver = docresolver.DocResolver()
-_resolver.setwordmap(_wordmap)
+_keywordutils = keywordutils.KeywordUtils()
+_keywordutils.setwordmap(_wordmap)
 
 
 def setwordlimit(limit):
@@ -37,8 +38,20 @@ def loaddic(dic_path):
 def savemodel(model_dir):
     _trainer.savemodel(model_dir)
 
-def setresolver(resolver):
-    _trainer.setresolver(resolver)
+def addresolver(resolver):
+    _trainer.addresolver(resolver)
+
+def removeresolver(resolver):
+    _trainer.removeresolver(resolver)
+
+def registerKeyword(keyword, pos):
+    _wordmap.registerKeyword(keyword, pos)
+
+def resolveword(text):
+    return _trainer.resolveword(text)
+
+def setscorefunction(fn):
+    _trainer.scorefunction = fn
 
 def train(data_dir, pattern="*.txt", limit=0):
     """ Load training data """
@@ -57,10 +70,13 @@ def train(data_dir, pattern="*.txt", limit=0):
             print(index,end=">")
             if index % 1000 == 0:
                 print()
+    
+    buildvocab()
     print("Trained ", index, "files : ellapsed time", stopwatch.millisecstr(), "ms.")
 
+# return snglist, ylist, clist, ambilist
 def buildvocab():
-    _trainer.buildVocab()
+    return _trainer.buildVocab()
 
 def readfile(filepath):
     """
@@ -114,7 +130,7 @@ def keywords(words_array, rate=0.05):
     """
     return dictionary {keywod:count,...}
     """
-    return _resolver.extractKeywords(words_array,rate)
+    return _keywordutils.extractKeywords(words_array,rate)
 
 
 def keywordsFromText(text, rate=0.05):
@@ -123,7 +139,7 @@ def keywordsFromText(text, rate=0.05):
     return dictionary {keywod:count,...}
     """
     _,words_array = readtext(text)
-    return _resolver.extractKeywords(words_array,rate)
+    return _keywordutils.extractKeywords(words_array,rate)
 
 
 def abstractKeywords(words_array, rate=0.05, count=3):
@@ -132,12 +148,12 @@ def abstractKeywords(words_array, rate=0.05, count=3):
     param count : 문장 개수  , 기본값 3
     return keywords, sentences
     """
-    keywords = _resolver.extractKeywords(words_array, rate)
+    keywords = _keywordutils.extractKeywords(words_array, rate)
     if len(keywords) < 1:
         rate /= 2
-        keywords = _resolver.extractKeywords(words_array, rate)
+        keywords = _keywordutils.extractKeywords(words_array, rate)
 
-    sentences = _resolver.abstractDocument(keywords, words_array, count)
+    sentences = _keywordutils.abstractDocument(keywords, words_array, count)
     return keywords, sentences
 
 
@@ -151,7 +167,7 @@ def abstract(text, rate=0.05, count=3):
     return abstractKeywords(words_array,rate, count)
 
 def printSentences(sentences):
-    docresolver.printSentences(sentences)
+    keywordutils.printSentences(sentences)
 
 # line단위 텍스트로 변환
 # return string array

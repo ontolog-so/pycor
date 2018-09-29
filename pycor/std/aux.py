@@ -474,7 +474,7 @@ ecJiRaDo = lm.regMultiSyllablesAux('지라도').tag("EC-evenif").incase(afterJon
 ecGeoNa = lm.regMultiSyllablesAux('거나').tag("EC-or").after([jkpI])
 ecDeunJi = lm.regMultiSyllablesAux('든지').tag("EC-or").after([jkpI])
 
-ecGeoNa.after([eptEot, eptAt, eptYeot, efnDa])
+ecGeoNa.after([eptEot, eptAt, eptYeot, efnDa, eptPasts])
 ecDeunJi.after([eptEot, eptAt, eptYeot, efnDa])
 #----------------------------------
 # EC 연결 어미 > 방법/수단 : ~아서/어서, ~고
@@ -523,6 +523,8 @@ jksSeo = lm.regAux(['서']).tag("JKS").setscore(-2).incase([lm.onlyAfter]).after
         lm.Aux('께').tag("JKS").setscore(-1),
         lm.Aux('에').tag("JKS").setscore(-2),
         ])
+
+jksYaMalLo = lm.regMultiSyllablesAux('야말로').tag("JKS").incase([afterVowel]).after([ jkpI ])
 
 jksI.after([etnEum, etnM, etnIm])
 jksGa.after([etnGi ])
@@ -708,8 +710,6 @@ jxJoCha = lm.regMultiSyllablesAux('조차').tag("JX").after([etnEum, etnM,etnGi]
 jxDo.after([jkbESeo,jkbE_at,jkbE_to,jkbEGe,jkbEuRo,jxGgaJi,jxMaJeo,jxJoCha,jkbEuRo])
 # ~에서조차, ~에조차, ~에게조차, ~으로조차,
 jxJoCha.after([jkbESeo,jkbE_at,jkbE_to,jkbEGe,jkbEuRo])
-# ~으로까지 
-jxGgaJi.after([jkbEuRo])
 #----------------------------------
 # JX 보조사 뿐/만
 #----------------------------------
@@ -767,7 +767,9 @@ jxGryeo = lm.regMultiSyllablesAux('그려').tag("JX")
 #----------------------------------
 # JX 보조사 따라
 #----------------------------------
-jxDdaRa = lm.regMultiSyllablesAux('따라').tag("JX") 
+jxDdaRa = lm.regMultiSyllablesAux('따라').tag("JX")
+jxDdaRa.after([jkbE_to, jkbE_at])
+
 #----------------------------------
 # JX 보조사 토록
 #----------------------------------
@@ -876,6 +878,9 @@ jksGa.after([jkbESeo, jkbBuTeo,jxBuTeo, jxGgaJi, jcWa, jkbE_to, jkbEuRo, jkbRoSe
 # ~에서보다, ~한테보다, ~부터보다 , ~까지보다, ~와보다 , ~에보다 , ~으로보다, ~로서보다 , ~으로서보다, ~으로써보다
 jkbBoDa.after([jkbESeo,jkbHante, jkbBuTeo,jxBuTeo, jxGgaJi, jcWa, jkbE_to, jkbEuRo, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
 
+
+# ~으로까지 , ~에서까지, ~에까지, 에게까지, 으로까지, ~기까지 
+jxGgaJi.after([jkbEuRo, jkbESeo,jkbE_at,jkbE_to,jkbEGe, jkbEuRo, etnGi])
 
 # ~와는 
 jxNeun.after([jkbWa,jkbGwa,jksI,jkbE_to,jkbEGe,jkbGge,jkbHante,jkbESeo,jkbEGeSeo,jkbBuTeo,jxBuTeo,

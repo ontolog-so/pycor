@@ -24,7 +24,7 @@ class SentenceWrap:
         self.keywords = keywords
         self.index = index
         
-class DocResolver:
+class KeywordUtils:
     ESC_WORDCOUNT_TAGS = set(['MAG','MAJ','MM','DN','NP','NNB', 'PT','QS','QE','QM','VOID','EC','CL','SC','Y'])
 
     def __init__(self):

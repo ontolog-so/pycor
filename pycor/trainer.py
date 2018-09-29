@@ -20,7 +20,6 @@ class Trainer(parser.SentenceParser) :
     def __init__(self, wordsthreshold=100000):
         super().__init__()
         self.wordsthreshold = wordsthreshold
-        self.checkCount = 1
         print("Init Trainer")
         self.lock = Lock()
 
@@ -34,6 +33,12 @@ class Trainer(parser.SentenceParser) :
         for word in self.wordmap.words.values():
             self.scoreword(word)
         
+        collList = list(self.wordmap.collocations.values())
+
+        for col in collList:
+            if col.frequency < 3:
+                del self.wordmap.collocations[col.text]
+                
         snglist, ylist, clist, ambilist = self.classifyHeads(self.wordmap.words.values())
 
         print("Single Count:", len(snglist))
@@ -41,6 +46,7 @@ class Trainer(parser.SentenceParser) :
         print("체언 Count:", len(clist))
         print("Ambiguous Count:", len(ambilist))
         print("Heads Count:", len(self.wordmap.heads))
+        print("Collocations Count:", len(self.wordmap.collocations))
         print("Tails Count:", len(self.wordmap.tails))
 
         self.wordmap.clearwords()
@@ -49,6 +55,7 @@ class Trainer(parser.SentenceParser) :
     
     def train(self,filepath):
         sentence_array = self._loadfile(filepath)
+        self._doresolver(sentence_array)
         self.checkVocab(sentence_array)
 
     # 각 문서별 Scoring 생략 
@@ -57,8 +64,7 @@ class Trainer(parser.SentenceParser) :
  
 
     def checkVocab(self, sentence_array):
-        if len(self.wordmap.words) > self.wordsthreshold * self.checkCount:
-            self.checkCount += 1
+        if len(self.wordmap.words) > self.wordsthreshold :
             self.buildVocab()
         return None
         

@@ -87,23 +87,32 @@ class WordGroup:
     def text(self):
         text = ''
         for w in self.words:
-            #print ('text concat ', type(w) , w)
-            text += w.text + ' '
+            if issubclass(type(w), WordGroup):
+                text += w.text() + ' '
+            else:
+                text += w.text + ' '
         return text
     
     def addword(self, word):
         #print ("append ", type(word) , word)
         self.words.append(word)
 
+
+SENTENCE_TYPE_QUOTE = 'QUOTE'
+SENTENCE_TYPE_EQUIV = 'EQUIV'
+
 class Sentence(WordGroup):
     def __init__(self):
         super().__init__()
+        self.senttype = None
+    
+    
 
 
-class Document:
-    def __init__(self, sentence_array, words_array):
-        self.sentence_array = sentence_array 
-        self.words_array = words_array
+# class Document:
+#     def __init__(self, sentence_array, words_array):
+#         self.sentence_array = sentence_array 
+#         self.words_array = words_array
 
 
 
@@ -119,6 +128,7 @@ class Head:
         self.frequency = 0
         self.tails = []
         self.proto = None
+        # self.equivalent = None
         self.pos = set()
         
     def type(self):
@@ -189,25 +199,86 @@ class Tail():
     
 _VOID_Tail = Tail(u'')  
 
+
+# 연어의 구성 요소 
+class CollocationHead(Head):
+    def __init__(self, texts):
+        super().__init__(' '.join(texts))
+        self.texts = texts
+        self.score = 1
+    
+    def tp():
+        return "HEAD"
+    
+
+class ContextWrapper:
+    def __init__(self, parent):
+        self.parent = parent
+
+    def addword(self, wordObj):
+        self.parent.addword(wordObj)
+        return wordObj
+
+    def getword(self, text):
+        return self.parent.getword(text)
+    
+    def registerKeyword(self, text, pos):
+        return self.parent.registerKeyword(text, pos)
+
+    def getcollocation(self, text):
+        return self.parent.getcollocation(text)
+
+    def addcollocation(self, collocation):
+        self.parent.addcollocation(collocation)
+
+    def getOrNewHead(self, text):
+        return self.parent.getOrNewHead(text)
+
+    def save(self, modelDir):
+        self.parent.save(modelDir)
+
+    def load(self, modelDir):
+        self.parent.load(modelDir)
+        
 ########################
-#  단어 정보 및 처리 객체 
+#  단어 정보 객체 
 ########################
 class WordMap :
-    def __init__(self, wordparser, wordlimit=200000):
-        self.wordparser = wordparser
+    def __init__(self, wordlimit=200000):
+        super().__init__()
         self.words = {}
         self.heads = {}
         self.tails = {}
+        self.collocations = {}
         self.wordlimit = wordlimit
-        
-    def getword(self, text, prev, nxt):
+    
+    def addword(self, wordObj):
+        text = wordObj.text
         word = self.words.get(text)
         if word is None:
-            word = Word(text)
-            self.wordparser.digest_word(word, prev, nxt)
-            self.words[text] = word
+            self.words[text] = wordObj
+        else :
+            raise Exception("Word '" + text + "' is already registered.")
+        return wordObj
+
+    def getword(self, text):
+        word = self.words.get(text)
         return word
     
+    def getOrNewHead(self, text):
+        head = self.heads.get(text)
+        if head is None:
+            head = Head(text)
+            self.heads[text] = head
+        return head
+
+    def getcollocation(self, text):
+        return self.collocations.get(text)
+
+    def addcollocation(self, collocation):
+        if self.collocations.get(collocation.text) is None:
+            self.collocations[collocation.text] = collocation
+
     # 명사, 부사 등 조사/어미가 없는 단일 단어 등록  
     def registerKeyword(self, text, pos):
         word = self.words.get(text)
@@ -235,27 +306,20 @@ class WordMap :
             word.bestpair = pair
         return word
     
-    def getOrNewHead(self, text):
-        head = self.heads.get(text)
-        if head is None:
-            head = Head(text)
-            self.heads[text] = head
-        return head
-
     def save(self, modelDir):
         self.writeheads(path=modelDir + "/heads.csv")
         self.writetails(path=modelDir + "/tails.csv")
+        self.writecollocations(path=modelDir + "/collocations.csv")
         self.clearheads()
 
     def load(self, modelDir):
         self.readheads(path=modelDir + "/heads.csv")
         self.readtails(path=modelDir + "/tails.csv")
         
-
+    # words 비우기 
     def clearwords(self):
         print("Clear words size:", len(self.words))
-        for word in self.words.values():
-            word.clear()
+        self.words.clear()
 
     def clearheads(self):
         headlist = list(self.heads.values())
@@ -282,7 +346,7 @@ class WordMap :
     #########################
     ## Head/tail 출력 내부 함수 
     #########################
-    def __write_particles(self, path, parts, bhead, sorter=None, reversed=False):
+    def _write_particles(self, path, parts, bhead, sorter=None, reversed=False):
         starttime = time.time()
         with open(path, 'w', encoding='utf-8') as csvfile :
             writer = csv.writer(csvfile)
@@ -306,15 +370,11 @@ class WordMap :
     ## Head 출력 
     #########################
     def writeheads(self, path="model/heads.csv", sorter=sortParticle, reversed=False):
-        self.__write_particles(path, self.heads, True, sorter, reversed)
+        self._write_particles(path, self.heads, True, sorter, reversed)
         
-    #########################
-    ## Tail 출력 
-    #########################
-    def writetails(self, path="model/tails.csv", sorter=sortParticle, reversed=False):
-        self.__write_particles(path, self.tails, False, sorter, reversed)
-
-    
+    def writecollocations(self, path="model/collocations.csv", sorter=sortParticle, reversed=False):
+        self._write_particles(path, self.collocations, True, sorter, reversed)
+        
     #########################
     ## Head 로딩 
     #########################
@@ -354,6 +414,13 @@ class WordMap :
         print("Load ", path,  "  소요시간:" , round(time.time() - starttime, 3))
         
     #########################
+    ## Tail 출력 
+    #########################
+    def writetails(self, path="model/tails.csv", sorter=sortParticle, reversed=False):
+        self._write_particles(path, self.tails, False, sorter, reversed)
+
+    
+    #########################
     ## Tail 로딩 
     #########################
     def readtails(self, path="model/tails.csv"):
@@ -372,3 +439,4 @@ class WordMap :
                 self.tails[text] = tail
             csvfile.close()
         print("Load ", path,  "  소요시간:" , round(time.time() - starttime, 3))
+

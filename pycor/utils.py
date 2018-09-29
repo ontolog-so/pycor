@@ -88,3 +88,11 @@ def listfiles(path, pattern=None, cascade=True):
             else:
                 result_arr.append(full_filename)
     return result_arr
+
+class NGram:
+    def __init__(self, text, values):
+        self.text = text
+        self.values = values
+        self.count = 0
+    
+    
