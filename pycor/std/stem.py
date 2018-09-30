@@ -27,11 +27,13 @@ npNeoHi = lm.regStem("희").setpos('NP').incase(lm.onlyAfter).after([
 npDangSin = lm.regStem("신").incase(lm.onlyAfter).after(lm.Stem("당").setpos('NP').incase(constraintFirst))
 lm.regStem("분").incase(lm.onlyAfter).after(lm.Stem("러").incase(lm.onlyAfter).after(
         lm.Stem("여").setpos('NP').incase(constraintFirst)))
+
 npGeot = lm.regStem("것").setpos('NP').after([
     lm.Stem("그").setpos('NP').incase(constraintFirst),
     lm.Stem("저").setpos('NP').incase(constraintFirst),
     lm.Stem("이").setpos('NP').incase(constraintFirst)
 ])
+
 lm.regStem("들").setpos('NP').incase(lm.onlyAfter).after([npGeot,npI,npGeu,npGeuNyeo,npJeo,npWoori,npNeoHi,npDangSin])
 
 lm.regStem("때", atag='NNB').setpos('NNB').incase(constraintFirst)

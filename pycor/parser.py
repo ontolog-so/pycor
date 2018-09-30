@@ -201,6 +201,8 @@ class WordParser:
                 if head.score>0:
                     pair = sm.Pair(word, None)
                     self.digest_pair(None, wordObj, pair, wordmap)
+                    return
+            
             tokens = WordTokens(word)
             self.bisect(tokens, wordObj, prevWord, nextWord, wordmap)
             

@@ -151,6 +151,14 @@ class ConstraintAfter(Constraint):
         prevStr = wordTokens.peekPrev()
         return prevStr in self.prevs
 
+class ConstraintNotAfter(Constraint):
+    def __init__(self, prevs):
+        super().__init__()
+        self.prevs = set(prevs)
+    def accept(self, wordTokens, worm, prevWord, nextWord, headObj, tags):
+        prevStr = wordTokens.peekPrev()
+        return not(prevStr in self.prevs)
+
 # 접미사 제약 사항 : ~tag가 포함되지 않는 경우에만 
 class ConstraintSuffixWithoutTags(Constraint):
     def __init__(self, tags):
@@ -520,7 +528,10 @@ class Stem(Worm):
     
     def _procedeImpl(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
         idx = wordTokens.curidx
-        return sm.Pair(wordTokens.head(idx), wordTokens.tail(idx), self.score+1).addtags(self.getTag(prevPair)).addpos(self.pos)
+        score = self.score
+        if prevPair:
+            score += prevPair.score
+        return sm.Pair(wordTokens.head(idx), wordTokens.tail(idx), score).addtags(self.getTag(prevPair)).addpos(self.pos)
 
 class MultiSyllablesStem(_MultiSyllablesWorm) :
     def __repr__(self):
@@ -578,7 +589,10 @@ class _InnerStemAux(Worm):
         
     def _procedeImpl(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
         idx = wordTokens.curidx + self.length
-        return sm.Pair(wordTokens.head(idx), wordTokens.tail(idx), self.score).addtags(self.getTag(prevPair)).addpos(self.pos)
+        score = self.score
+        if prevPair:
+            score += prevPair.score
+        return sm.Pair(wordTokens.head(idx), wordTokens.tail(idx), score).addtags(self.getTag(prevPair)).addpos(self.pos)
 
     
 ############################################
@@ -594,8 +608,11 @@ class Suffix(Worm):
     def _procedeImpl(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
         head = wordTokens.head()
         tail = wordTokens.tail()
-        
-        return sm.Pair(head, tail, self.score+1).addpos(self.pos)
+        score = self.score
+        if prevPair:
+            score += prevPair.score
+
+        return sm.Pair(head, tail, score).addpos(self.pos)
 
 
     def setProtoPos(self, pos):
