@@ -1,7 +1,7 @@
 import re
 import os
 import pycor.speechmodel as sm
-from pycor import langmodel, korutils, scoring
+from pycor import langmodel, korutils, scoring, classifier
 
 class Quote:
     def __init__(self,start,end):
@@ -196,33 +196,37 @@ class WordParser:
             pair.head.addpos(sng.atag)
         else :
             # v0.0.6
+            fromLast = False
             if word in wordmap.heads:
                 head = wordmap.heads[word]
                 if head.score>0:
                     pair = sm.Pair(word, None)
                     self.digest_pair(None, wordObj, pair, wordmap)
                     return
-            
+                else:
+                    fromLast = True
+
             tokens = WordTokens(word)
-            self.bisect(tokens, wordObj, prevWord, nextWord, wordmap)
+            self.bisect(tokens, wordObj, prevWord, nextWord, wordmap, fromLast)
             
-    def bisect(self, wordTokens, wordObj, prevWord, nextWord, wordmap):
+    def bisect(self, wordTokens, wordObj, prevWord, nextWord, wordmap, fromLast=False):
         token = wordTokens.prev()
         if token:
             pairs = []
-
+            zeroPair = None
             worms = self.getAuxs(token)
+            if worms is None or fromLast:
+                head = wordObj.text
+                zeroPair = sm.Pair(head, None, 0)
+                pairs.append(zeroPair)
+
             if worms:
                 curidx = wordTokens.curidx
                 for worm in worms :
-                    headtails = worm.procede(wordTokens, None, wordObj, None, prevWord, nextWord)
+                    headtails = worm.procede(wordTokens, None, wordObj, zeroPair, prevWord, nextWord)
                     if headtails:
                         pairs.extend(headtails)
                     wordTokens.setPos(curidx)
-            else :
-                head = wordObj.text
-                pair = sm.Pair(head, None, 0)
-                pairs.append(pair)
             
             for pair in pairs:
                 self.digest_pair(wordTokens, wordObj, pair, wordmap)
@@ -286,16 +290,17 @@ class WordParser:
 #################################################
 class SentenceParser:
     def __init__(self, wordparser=WordParser(), quoteclues=_quoteclues, equivalentclues=_equivalentclues , 
-        scorefunction=scoring.default_scorepair, wordMap=None):
-        self._initimpl(wordparser, quoteclues, equivalentclues, scorefunction, wordMap)
+        scorefunc=scoring.default_scorepair, classifyfunc=classifier.def_classify, wordMap=None):
+        self._initimpl(wordparser, quoteclues, equivalentclues, scorefunc, classifyfunc, wordMap)
         self.verbose = False
         self.resolvers = []
         
-    def _initimpl(self, wordparser, quoteclues, equivalentclues, scorefunction, wordMap=None):
+    def _initimpl(self, wordparser, quoteclues, equivalentclues, scorefunc, classifyfunc, wordMap=None):
         if wordMap is None:
             wordMap = sm.WordMap()
         self.wordmap = wordMap
-        self.scorefunction = scorefunction
+        self.scorefunction = scorefunc
+        self.classifyfunction = classifyfunc
         self.wordparser = wordparser
         self.quoteclues = quoteclues
         self.equivalentclues = equivalentclues
@@ -505,10 +510,15 @@ class SentenceParser:
             else :
                 prevWords = sentence.words[:index]
                 nextWords = sentence.words[index+1:]
+                self.classifyHeads(word)
                 self.scoreword(word, prevWords, nextWords)
                 words.append(word)
         
         return words
+
+    def classifyHeads(self,word):
+        for pair in  word.particles:
+            self.classifyfunction(pair.head, True)
 
     def scoreword(self, word, prevWords=None, nextWords=None) :
         if word.bestpair:
@@ -523,15 +533,14 @@ class SentenceParser:
                     if part.score > maxPart.score:
                         maxPart = part
                     elif (part.score == maxPart.score) :
-                        if (len(part.tags)>len(maxPart.tags)):
-                            maxPart = part
-                        elif len(part.tags) == len(maxPart.tags) :
+                        if len(part.tags) == len(maxPart.tags) :
                             if len(part.tail.text) > len(maxPart.tail.text):
                                 maxPart = part
+                        elif (len(part.tags)>len(maxPart.tags)):
+                            maxPart = part
                 else :
                     maxPart = part
                     
-            # score = (maxPart.score / len(self.wordmap.words))
             score = maxPart.score
             
             if maxPart.head:

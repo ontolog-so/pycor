@@ -19,8 +19,8 @@ npGeuNyeo = lm.regStem("녀").incase(lm.onlyAfter).after(lm.Stem("그").setpos('
 npJeo = lm.regStem("저", atag='NP').incase(constraintFirst).setpos('NP')
 lm.regStem("나", atag='NP').incase(constraintFirst).setpos('NP')
 lm.regStem("너", atag='NP').incase(constraintFirst).setpos('NP')
-npWoori = lm.regStem("리").setpos('NP').after(lm.Stem("우").setpos('NP').incase(constraintFirst))
-npNeoHi = lm.regStem("희").setpos('NP').incase(lm.onlyAfter).after([
+npWoori = lm.regStem("리").incase(lm.onlyAfter).setpos('NP').after(lm.Stem("우").setpos('NP').incase(constraintFirst))
+npNeoHi = lm.regStem("희").incase(lm.onlyAfter).setpos('NP').incase(lm.onlyAfter).after([
     lm.Stem("너").setpos('NP').incase(constraintFirst),
     lm.Stem("저").setpos('NP').incase(constraintFirst)
 ])

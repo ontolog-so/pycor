@@ -80,12 +80,13 @@ irrR_BaR = klm.TransformedStem('발','바르', atag="V+IRR+AMBI", score=1).incas
 irrR_GaR = klm.TransformedStem('갈','가르', atag="V+IRR+AMBI", score=1).incase(first)
 irrR_NaR = klm.TransformedStem('날','나르', atag="V+IRR+AMBI", score=1).incase(first)
 irrR_JaR = klm.TransformedStem('잘','자르', atag="V+IRR+AMBI", score=1).incase(first)
+irrR_OR = klm.TransformedStem('올','오르', atag="V+IRR+AMBI", score=1)
 
 auxIrrLa = lm.regAux('라').incase(lm.onlyAfter).setpos('Y').after([
-        irrR_MoR,irrR_MaR,irrR_DaR,irrR_SaR, irrR_BaR,irrR_GaR,irrR_NaR, irrR_JaR
+        irrR_MoR,irrR_MaR,irrR_DaR,irrR_SaR, irrR_BaR,irrR_GaR,irrR_NaR, irrR_JaR, irrR_OR
         ])
 auxIrrLat = lm.Aux('랐').incase(lm.onlyAfter).setpos('Y').after([
-        irrR_MoR,irrR_MaR,irrR_DaR,irrR_SaR, irrR_BaR,irrR_GaR,irrR_NaR, irrR_JaR
+        irrR_MoR,irrR_MaR,irrR_DaR,irrR_SaR, irrR_BaR,irrR_GaR,irrR_NaR, irrR_JaR, irrR_OR
         ])
 
 irrR_GuR = klm.TransformedStem('굴','구르', atag="V+IRR+AMBI", score=1).incase(first)
@@ -156,10 +157,10 @@ irrB_Wa2 = lm.regAux( klm.IrregularAux('와', headJongsung='ㅂ', tail='아', at
         klm.ConstraintAfter(['나','다','까','로' ]), klm.ConstraintMoreThanAfter(1) ]).setscore(-1)
 
 irrB_Wat = klm.IrregularAux('왔', headJongsung='ㅂ', tail='았', atag="ADJ|V+IRB").setpos('Y').incase([
-        klm.ConstraintAfter(['고','도']), klm.ConstraintLessThanAfter(2)])
+        klm.ConstraintAfter(['고','도']), klm.ConstraintLessThanAfter(2)]).setscore(1)
         
 irrB_Wat2 = klm.IrregularAux('왔', headJongsung='ㅂ', tail='았', atag="ADJ|V+IRB").setpos('Y').incase([
-        klm.ConstraintAfter(['나','다','까','로' ]), klm.ConstraintMoreThanAfter(1)])
+        klm.ConstraintAfter(['나','다','까','로' ]), klm.ConstraintMoreThanAfter(1)]).setscore(1)
         
 irrB_Weo = lm.regAux( klm.IrregularAux('워', headJongsung='ㅂ', tail='어', atag="ADJ|V+IRB") ).setpos('Y').incase([
         klm.ConstraintAfter(['더','주','구','고','도','누','겨' ]) ]) 
@@ -168,10 +169,10 @@ irrB_Weo2 = lm.regAux( klm.IrregularAux('워', headJongsung='ㅂ', tail='어', a
         klm.ConstraintAfter(['나','스','러','서','여','로','다','까','벼' ]), klm.ConstraintMoreThanAfter(1) ]) 
 
 irrB_Weot = klm.IrregularAux('웠', headJongsung='ㅂ', tail='었', atag="ADJ|V+IRB").setpos('Y').incase([
-        klm.ConstraintAfter(['더','주','구','고','도','누','겨' ]) ]) 
+        klm.ConstraintAfter(['더','주','구','고','도','누','겨' ]) ]).setscore(1)
 
 irrB_Weot2 = klm.IrregularAux('웠', headJongsung='ㅂ', tail='었', atag="ADJ|V+IRB").setpos('Y').incase([
-        klm.ConstraintAfter(['나','스','러','서','여','로','다','까','벼' ]), klm.ConstraintMoreThanAfter(1) ]) 
+        klm.ConstraintAfter(['나','스','러','서','여','로','다','까','벼' ]), klm.ConstraintMoreThanAfter(1) ]).setscore(1)
 
 aux.ecNa.after([irrB_Weot2,irrB_Weot,irrB_Wat,irrB_Wat2])
 aux.auxEu.after([irrB_Weot2,irrB_Weot,irrB_Wat,irrB_Wat2])

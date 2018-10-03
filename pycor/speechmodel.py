@@ -158,6 +158,15 @@ class Head:
 
         return self
 
+    def removepos(self, pos):
+        if pos in self.pos:
+            self.pos.remove(pos)
+
+    def clearpos(self):
+        self.pos.clear()
+        return self
+        
+
 _VOID_Head = Head(u'').addpos('VOID')
 
 class Keyword(Head):

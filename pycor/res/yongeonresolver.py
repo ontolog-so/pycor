@@ -28,7 +28,8 @@ class YongeonResolver(resolver.Resolver):
 
                     phrase = []
                     texts = []
-                    phrase.append(word)
+                    tags = []
+                    # phrase.append(word)
                     texts.append(word.text)
 
                     if index > 1:
@@ -36,14 +37,20 @@ class YongeonResolver(resolver.Resolver):
                         if type(prev) is sm.Word:
                             phrase.append(prev)
                             texts.append(prev.text)
+                            if prev.bestpair:
+                                tags.append('+'.join(prev.bestpair.tags))
+
                             if index > 2:
                                 prev = sentence.words[index-2]
                                 if type(prev) is sm.Word:
                                     phrase.append(prev)
                                     texts.append(prev.text)
+                                    if prev.bestpair:
+                                        tags.append('+'.join(prev.bestpair.tags))
+                                
 
                     text = ' '.join(reversed(texts))
-                    tagtext = ':'.join(reversed(texts[:len(texts)-1]))
+                    tagtext = ':'.join(reversed(tags))
 
                     if pmap.get(text) is None:
                         wl = list(reversed(phrase))
@@ -73,12 +80,14 @@ class YongeonResolver(resolver.Resolver):
                     row = []
                     row.append(head.text)
                     row.append(text)
+                    tags = []
                     for w in m:
                         if w.bestpair:
-                            row.append('+'.join(w.bestpair.tags))
+                            tags.append('+'.join(w.bestpair.tags))
                         else :
-                            row.append(w.text)
+                            tags.append(w.text)
                     
+                    row.append(':'.join(tags))
                     writer.writerow(row)
 
             csvfile.close()

@@ -85,13 +85,16 @@ def getStems(token):
 
 def regSuffix(suffix, atag=None, precedents=None, constraints = None, score=0, escapeFirst=False):
     if type(suffix) is Suffix or issubclass(type(suffix), Worm):
+        _putmap2(stemmap, suffix)
         return _putmap2(suffixmap, suffix)
     elif type(suffix) is list:
         suffixObj = Suffix(suffix, atag=atag, precedents=precedents, constraints = constraints, score=score, escapeFirst=escapeFirst)
+        _putmap2(stemmap, suffixObj)
         return _putmap2(suffixmap, suffixObj)
     
     elif type(suffix) is str:
         suffixObj = Suffix(suffix, atag=atag, precedents=precedents, constraints = constraints, score=score, escapeFirst=escapeFirst)
+        _putmap2(stemmap, suffixObj)
         return _putmap2(suffixmap, suffixObj)
 
 # list로 반환 
@@ -325,11 +328,12 @@ class Worm:
         if headtail:
             headtails.append( headtail )
             headtail.ambiguous(self.ambi)
-            
-            # if headtail.score < 0 and wordTokens.fromEnd() <= 1:
-            #     ht = sm.Pair(wordTokens.text, None, self.score, self.atag, self.ambi )
-            #     headtails.append( ht )
-            
+        
+        if self.ambi and prevPair is None:
+            # 판단이 모호한 경우(ambiguous) + 이전 pair가 없는 경우  
+            ht = sm.Pair(wordTokens.head(wordTokens.curidx+1), None, self.score, self.ambi )
+            headtails.append( ht )
+
         if wordTokens.peekPrev() :
             lastPair = headtail if headtail else prevPair
             upWorms = self.getUpWorms(wordTokens, self, wordObj, lastPair, prevWord, nextWord)
@@ -606,14 +610,19 @@ class Suffix(Worm):
 
 
     def _procedeImpl(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
-        head = wordTokens.head()
-        tail = wordTokens.tail()
+        # head = wordTokens.head()
+        # tail = wordTokens.tail()
+        # score = self.score
+        # if prevPair:
+        #     score += prevPair.score
+        # return sm.Pair(head, tail, score).addpos(self.pos)
+
+        idx = wordTokens.curidx
         score = self.score
         if prevPair:
             score += prevPair.score
-
-        return sm.Pair(head, tail, score).addpos(self.pos)
-
+        
+        return sm.Pair(wordTokens.head(idx), wordTokens.tail(idx), score).addpos(self.protoPos)
 
     def setProtoPos(self, pos):
         self.protoPos = pos

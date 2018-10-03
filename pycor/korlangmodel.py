@@ -180,7 +180,7 @@ class WithJongsungAux(lm.Aux) :
 class JongsungAux(lm.Aux) :
     def __init__(self, tokens, jongsungs,  atag=None, precedents = None, constraints = [], score=0, escapeFirst=True, ambi=False):
         self._set( tokens, atag, precedents , constraints , score, escapeFirst,ambi )
-        self.constraints.append(ConstraintWithJongsung(jongsungs))
+        # self.constraints.append(ConstraintWithJongsung(jongsungs))
         self.jongsungs = jongsungs
         
     def _procedeImpl(self,wordTokens, followingAux, wordObj, prevPair, prevWord, nextWord):
@@ -193,7 +193,7 @@ class JongsungAux(lm.Aux) :
                 head = ''.join([wordTokens.head(wordTokens.curidx), removed])
                 tail = ''.join([final, wordTokens.tail(wordTokens.curidx+1)])
                 return sm.Pair(head, tail, self.score).addtags(self.getTag(prevPair)) 
-        
+                
         return None
 
 
