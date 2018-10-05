@@ -330,8 +330,9 @@ class Worm:
             headtail.ambiguous(self.ambi)
         
         if self.ambi and prevPair is None:
+            # 0.0.7
             # 판단이 모호한 경우(ambiguous) + 이전 pair가 없는 경우  
-            ht = sm.Pair(wordTokens.head(wordTokens.curidx+1), None, self.score, self.ambi )
+            ht = sm.Pair(wordTokens.head(wordTokens.curidx+1), None, self.score, self.ambi)
             headtails.append( ht )
 
         if wordTokens.peekPrev() :

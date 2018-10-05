@@ -453,7 +453,7 @@ ecJaMyeon = lm.regMultiSyllablesAux('자면').tag("EC-to")
 
 # ~아야, ~어야 
 ecYa = lm.regAux('야').tag("EC-incase").incase(afterVowel).after([
-        auxA, auxEo,auxDoeEo, auxYeo, ecMyeon, auxKyeo,auxHae, auxStemDoeEo, auxGieEo, auxChiEo
+        auxA, auxEo, auxDoeEo, auxYeo, ecMyeon, auxKyeo,auxHae, auxStemDoeEo, auxGieEo, auxChiEo
         ])
 
 #----------------------------------

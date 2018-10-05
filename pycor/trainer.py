@@ -31,7 +31,7 @@ class Trainer(parser.SentenceParser) :
             return
 
         for word in self.wordmap.words.values():
-            self.scoreword(word)
+            self.scoreword(word, force=True)
         
         collList = list(self.wordmap.collocations.values())
 

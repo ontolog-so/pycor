@@ -10,14 +10,14 @@ def default_scorepair(pair, word, context):
     hs = pair.head.occurrence()
     ts = 0.0
     
-    if pair.tail:
+    if pair.tail :
         ts = (pair.tail.occurrence() *0.009) - (len(pair.tail.text) * 0.09)
 
     penalty = 0
 
     if pair.ambi:
         penalty += 1
-        
+    
     if len(cheeonPos & pair.head.pos)>0:
         if not('JKP' in pair.tags):
             for t in pair.tags:

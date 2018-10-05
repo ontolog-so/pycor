@@ -195,9 +195,10 @@ class WordParser:
             self.digest_pair(None, wordObj, pair, wordmap)
             pair.head.addpos(sng.atag)
         else :
-            # v0.0.6
+            # v0.0.7
             fromLast = False
             if word in wordmap.heads:
+                # word가 heads맵에 이미 등록된 경우 
                 head = wordmap.heads[word]
                 if head.score>0:
                     pair = sm.Pair(word, None)
@@ -213,6 +214,7 @@ class WordParser:
         token = wordTokens.prev()
         if token:
             pairs = []
+            # 0.0.7 zeroPair 
             zeroPair = None
             worms = self.getAuxs(token)
             if worms is None or fromLast:
@@ -254,9 +256,11 @@ class WordParser:
             tail = wordmap.tails.get(t)
             if tail is None:
                 tail = self.buildtail(t, wordmap)
-
             head.appendtail(tail)
             tail.appendhead(head)
+        elif head.occurrence() == 0:
+            head.occ = 1
+            
         pair.head = head
         pair.tail = tail
         
@@ -511,7 +515,7 @@ class SentenceParser:
                 prevWords = sentence.words[:index]
                 nextWords = sentence.words[index+1:]
                 self.classifyHeads(word)
-                self.scoreword(word, prevWords, nextWords)
+                self.scoreword(word, prevWords, nextWords, force=True)
                 words.append(word)
         
         return words
@@ -520,8 +524,8 @@ class SentenceParser:
         for pair in  word.particles:
             self.classifyfunction(pair.head, True)
 
-    def scoreword(self, word, prevWords=None, nextWords=None) :
-        if word.bestpair:
+    def scoreword(self, word, prevWords=None, nextWords=None, force=False) :
+        if word.bestpair and not(force):
             return
 
         if len(word.particles) > 0:

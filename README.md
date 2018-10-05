@@ -1,4 +1,4 @@
-# PyCor 0.0.6
+# PyCor 0.0.7
 
 ## Python Module for Korean Language Processing
 ### NLCP : Natural Language Contextual Parsing
