@@ -566,8 +566,8 @@ class SentenceParser:
                 maxPart.head.addpos(maxPart.pos)
 
             if maxPart.tail and maxPart.tail != sm._VOID_Tail:
-            #     tscore = maxPart.tail.score + score
-            #     maxPart.tail.score = tscore /2
+                tscore = maxPart.tail.score + score
+                maxPart.tail.score = tscore /2
                 maxPart.tail.addtags(maxPart.tags)
 
             word.bestpair = maxPart

@@ -3,7 +3,7 @@ from pycor import trainer, parser, keywordutils, utils, korutils, resolver
 from pycor.std import *
 
 __all__ = ["getmodel", "setmodel", "loadmodel", "loaddic", "savemodel","addresolver", "removeresolver",
-            "train", "buildvocab", "readfile", "readtext", "resolveword", "setscorefunction",
+            "train", "trainfiles", "buildvocab", "readfile", "readtext", "resolveword", "setscorefunction",
             "trim","trimfile","__trim", "keywords","keywordsFromText", "setwordlimit", 
             "printSentences", "abstract", "abstractKeywords","totexts", "registerKeyword"]
 
@@ -53,30 +53,46 @@ def resolveword(text, debug=False):
 def setscorefunction(fn):
     _trainer.scorefunction = fn
 
-def train(data_dir, pattern="*.txt", limit=0):
+def train(data_dir, pattern="*.txt", limit=0, debugPath=None):
     """ Load training data """
-    stopwatch = utils.StopWatch()
     filelist = utils.listfiles(data_dir,pattern)
-    index = 0
     if limit > 0:
         filelist = filelist[:limit]
 
-    print("Loading Training Data - size:", len(filelist) )
+    trainfiles(filelist, debugPath)
+    
 
+def trainfiles(filelist, debugPath=None):
+    print("Loading Training Data - size:", len(filelist) )
+    stopwatch = utils.StopWatch()
+
+    debugWriter = None
+    debugfile = None
+
+    if debugPath:
+        import csv
+        debugfile = open(debugPath+"/debug_words.csv", 'w', encoding='utf-8')
+        debugWriter = csv.writer(debugfile)
+        
+    index = 0
     for file in filelist:
-        _trainer.train(file)
+        _trainer.train(file,debugWriter)
         index += 1
         if index % 100 == 0:
             print(index,end=">")
             if index % 1000 == 0:
                 print()
     
-    buildvocab()
+    buildvocab(debugWriter)
+
+    if debugfile:
+        debugfile.close()
+
     print("Trained ", index, "files : ellapsed time", stopwatch.millisecstr(), "ms.")
 
 # return snglist, ylist, clist, ambilist
-def buildvocab():
-    return _trainer.buildVocab()
+def buildvocab(debugWriter=None):
+    return _trainer.buildVocab(debugWriter)
 
 def readfile(filepath):
     """

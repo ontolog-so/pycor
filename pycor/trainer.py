@@ -15,6 +15,14 @@ from pycor import speechmodel as sm
 # C_TAGS2 = set(['JKO','JX-SO'])
 # C_POS = set(['NP','NNB'])
 
+def _debug_word(writer, word):
+    if len(word.particles) == 0:
+        writer.writerow([word.text, 'X'])
+    for part in word.particles:
+        h = part.head.text if part.head else ''
+        t = part.tail.text if part.tail else ''
+        writer.writerow([word.text, h, t, part.score, part.tags, part.pos])
+
 
 class Trainer(parser.SentenceParser) :
     def __init__(self, wordsthreshold=100000):
@@ -26,7 +34,7 @@ class Trainer(parser.SentenceParser) :
     def setwordlimit(self, wordsthreshold):
         self.wordsthreshold = wordsthreshold
 
-    def buildVocab(self) :
+    def buildVocab(self, debugWriter=None) :
         if len(self.wordmap.words) < 3:
             return
 
@@ -49,23 +57,28 @@ class Trainer(parser.SentenceParser) :
         print("Collocations Count:", len(self.wordmap.collocations))
         print("Tails Count:", len(self.wordmap.tails))
 
+        if debugWriter:
+            debugWriter.writerow(["---",len(self.wordmap.words),"---"])
+            for word in self.wordmap.words.values():
+                _debug_word(debugWriter, word)
+            
         self.wordmap.clearwords()
 
         return snglist, ylist, clist, ambilist
     
-    def train(self,filepath):
+    def train(self,filepath, debugWriter=None):
         sentence_array = self.loadfile(filepath)
         # self._doresolver(sentence_array)
-        self.checkVocab(sentence_array)
+        self.checkVocab(sentence_array, debugWriter)
 
     # 각 문서별 Scoring 생략 
     # def resolveDocument(self, sentence_array):
     #     return None
  
 
-    def checkVocab(self, sentence_array):
+    def checkVocab(self, sentence_array, debugWriter=None):
         if len(self.wordmap.words) > self.wordsthreshold :
-            self.buildVocab()
+            self.buildVocab(debugWriter)
         return None
         
 
