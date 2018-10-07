@@ -560,13 +560,14 @@ class SentenceParser:
             score = maxPart.score
             
             if maxPart.head:
-                hscore = maxPart.head.score + score
-                maxPart.head.score = hscore /2
+                # hscore = maxPart.head.score + score
+                # maxPart.head.score = hscore /2
+                maxPart.head.score = maxPart.head.score + score
                 maxPart.head.addpos(maxPart.pos)
 
             if maxPart.tail and maxPart.tail != sm._VOID_Tail:
-                tscore = maxPart.tail.score + score
-                maxPart.tail.score = tscore /2
+            #     tscore = maxPart.tail.score + score
+            #     maxPart.tail.score = tscore /2
                 maxPart.tail.addtags(maxPart.tags)
 
             word.bestpair = maxPart

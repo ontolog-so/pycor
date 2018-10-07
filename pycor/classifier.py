@@ -4,12 +4,12 @@ import pycor.speechmodel as sm
 
 
 Y_TAGS0 = set(['EFN','ETN','EFQ'])
-Y_TAGS1 = set(['EPT-pp','EPT-f','EPT-guess','EFN','EFI','EC-to','EC-for','EC-but'])
+Y_TAGS1 = set(['EPT-pp','EPT-f','EPT-guess','EFN','EFI','EC-to','EC-for','EC-evenif','EC-but'])
 Y_TAGS2 = set(['EPT-pr','ETM'])
 
 C_TAGS0 = set(['JKS','JKC','JKP'])
 C_TAGS1 = set(['JKG','JKB-TO','JKB-FM','JX-from','JKB-AS','JKB-WZ','JKB-LK','JC','JX','JKB-TT|AS|BY',
-                'EC-evenif','JKG-as','JKB-CM'])
+                'JKG-as','JKB-CM'])
 C_TAGS2 = set(['JKO','JX-SO'])
 C_POS = set(['NP','NNB'])
 

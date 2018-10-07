@@ -7,16 +7,20 @@ yoneonPos = {"Y","V"}
 
 def default_scorepair(pair, word, context):
     score = pair.score
-    hs = pair.head.occurrence() + pair.head.score
+    # hs = pair.head.occurrence() + pair.head.score
+    hs = pair.head.score + pair.head.occurrence() * 0.5
     ts = 0.0
     
     if pair.tail :
-        ts = (pair.tail.occurrence() *0.009) - (len(pair.tail.text) * 0.09) + pair.tail.score
+        # ts = (pair.tail.occurrence() *0.009) - (len(pair.tail.text) * 0.09)
+        ts = - len(pair.tail.text) 
 
     penalty = 0.0
 
     if pair.ambi:
-        penalty += 0.5
+        if pair.head.score<1:
+            penalty += 1-pair.head.score
+            
     
     if len(cheeonPos & pair.head.pos)>0:
         if not('JKP' in pair.tags):

@@ -54,8 +54,8 @@ class Trainer(parser.SentenceParser) :
         return snglist, ylist, clist, ambilist
     
     def train(self,filepath):
-        sentence_array = self._loadfile(filepath)
-        self._doresolver(sentence_array)
+        sentence_array = self.loadfile(filepath)
+        # self._doresolver(sentence_array)
         self.checkVocab(sentence_array)
 
     # 각 문서별 Scoring 생략 
