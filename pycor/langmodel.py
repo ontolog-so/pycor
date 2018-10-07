@@ -623,7 +623,7 @@ class Suffix(Worm):
         if prevPair:
             score += prevPair.score
         
-        return sm.Pair(wordTokens.head(idx), wordTokens.tail(idx), score).addpos(self.protoPos)
+        return sm.Pair(wordTokens.head(idx), wordTokens.tail(idx), score).addpos(self.pos)
 
     def setProtoPos(self, pos):
         self.protoPos = pos

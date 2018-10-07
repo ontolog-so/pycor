@@ -319,10 +319,22 @@ class SentenceParser:
         self.wordmap = wordMap
 
 
-    def resolveword(self, text):
+    def resolveword(self, text, debug=False):
         word = self.wordparser.getword(text, None, None,  self.wordmap)
-        self.scoreword(word)
+        self.scoreword(word, force=True)
+
+        if debug:
+            self.debugword(word)
+
         return word
+
+    def debugword(self, word):
+        if len(word.particles) == 0:
+            print(word.text, 'X')
+        for part in word.particles:
+            h = part.head.text if part.head else ''
+            t = part.tail.text if part.tail else ''
+            print(word.text, h, t, part.score, part.tags, part.pos)
 
     def loadfile(self, path, context=None):
         sentence_array = self._loadfile(path)
@@ -548,10 +560,13 @@ class SentenceParser:
             score = maxPart.score
             
             if maxPart.head:
-                maxPart.head.score += score
-            if maxPart.tail:
-                maxPart.tail.score += score
+                hscore = maxPart.head.score + score
+                maxPart.head.score = hscore /2
+                maxPart.head.addpos(maxPart.pos)
 
-            maxPart.head.addpos(maxPart.pos)
-            maxPart.tail.addtags(maxPart.tags)
+            if maxPart.tail and maxPart.tail != sm._VOID_Tail:
+                tscore = maxPart.tail.score + score
+                maxPart.tail.score = tscore /2
+                maxPart.tail.addtags(maxPart.tags)
+
             word.bestpair = maxPart

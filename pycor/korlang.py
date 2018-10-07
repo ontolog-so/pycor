@@ -47,8 +47,8 @@ def removeresolver(resolver):
 def registerKeyword(keyword, pos):
     _wordmap.registerKeyword(keyword, pos)
 
-def resolveword(text):
-    return _trainer.resolveword(text)
+def resolveword(text, debug=False):
+    return _trainer.resolveword(text,debug)
 
 def setscorefunction(fn):
     _trainer.scorefunction = fn
