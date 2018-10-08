@@ -5,6 +5,8 @@ import pycor.speechmodel as sm
 __all__ = ["YongeonResolver"]
 
 yongeonTags = set(['EFN'])
+cheeonTags = set(['JKP','JKP-pp','JKS'])
+cheeonPos = set(['C','NN','NP'])
 
 class YongeonResolver(resolver.Resolver):
     def __init__(self, phraseMap={}):
@@ -20,7 +22,11 @@ class YongeonResolver(resolver.Resolver):
             if type(word) is sm.Sentence :
                 self.resolveSentence(word, context, phraseMap,tagsetIndex)
             else:
-                if word.bestpair and len(yongeonTags & set(word.bestpair.tags))>0 :
+                if word.bestpair and len(yongeonTags & set(word.bestpair.tags))>0 and len(cheeonTags & set(word.bestpair.tags))==0:
+
+                    if len(cheeonPos & word.bestpair.head.pos) > 0:
+                        continue
+
                     pmap = phraseMap.get(word.bestpair.head)
                     if pmap is None:
                         pmap = {}
@@ -63,6 +69,43 @@ class YongeonResolver(resolver.Resolver):
                         tagsetIndex[tagtext] = headset
                     headset.add(word.bestpair.head)
 
+    def clssifyYongEon(self):
+        for head, pmap in self.phraseMap.items():
+            if len(cheeonPos & head.pos) > 0:
+                print("head is C", head)
+                # continue
+
+            tags = []
+
+            for text, m in pmap.items():
+                for w in m:
+                    if w.bestpair:
+                        tags.append('+'.join(w.bestpair.tags))
+                    else :
+                        tags.append(w.text)
+            
+            total = len(tags)
+
+            if total>0:
+                jko = float(tags.count('JKO') / total)
+                jkbFm = float(tags.count('JKB-FM') / total)
+                jkbBy = float(tags.count('JKB-TT|AS|BY') / total)
+                jkbTo = float(tags.count('JKB-TO') / total)
+                jks = float(tags.count('JKS') / total)
+                jxso = float(tags.count('JX-SO') / total)
+
+                if jko > 0.3:
+                    head.addpos('T')
+                    
+                if jkbFm > 0.3:
+                    head.addpos('D1')
+                    
+                if jkbBy > 0.3 or jkbTo > 0.3:
+                    head.addpos('D2')
+                    
+                if jks > 0.3 or jxso > 0.3:
+                    head.addpos('I')
+
 
     #########################
     ##  
@@ -79,6 +122,7 @@ class YongeonResolver(resolver.Resolver):
                 for text, m in pmap.items():
                     row = []
                     row.append(head.text)
+                    row.append(head.pos)
                     row.append(text)
                     tags = []
                     for w in m:

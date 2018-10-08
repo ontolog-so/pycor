@@ -262,10 +262,8 @@ efnGuNa = lm.regMultiSyllablesAux('구나').tag("EFN").after([
 efnGuNa.after(eptTimeSet).after(eptPasts)
 efnGuNa.after([ephSyeot,eptAt,eptEot])
 
-efnGun = lm.regAux('군').tag("EFN").after([
-        eptNeun, eptDeo
-        ])
-efnGun.after([eptTimeSet,eptAt,eptEot])
+# ~는군, ~더군, ~겠군, ~었군, ~했군
+efnGun = lm.regAux('군').tag("EFN").incase(lm.onlyAfter).after([eptTimeSet,eptAt,eptEot,eptNeun, eptDeo])
 
 efnNe = lm.regAux('네').tag("EFN").setscore(-1)
 # ~이네 
