@@ -5,10 +5,12 @@ import pycor.speechmodel as sm
 cheeonPos = {"C","NP","NN","NNB","ISM"}
 yoneonPos = {"Y","V"}
 
-def default_scorepair(pair, word, context):
+def default_scorepair(pair, word, context, prevWords, nextWords):
     score = pair.score
     # hs = pair.head.occurrence() + pair.head.score
-    hs = pair.head.score + pair.head.occurrence() * 0.5
+    # hs = (pair.head.score + 1)/ pair.head.occurrence() 
+    # hs = pair.head.score + pair.head.occurrence() * 0.5
+    hs = pair.head.score/pair.head.occurrence() + pair.head.occurrence() * 0.1
     ts = 0.0
     
     if pair.tail :

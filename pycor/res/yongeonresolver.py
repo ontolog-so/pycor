@@ -71,9 +71,9 @@ class YongeonResolver(resolver.Resolver):
 
     def clssifyYongEon(self):
         for head, pmap in self.phraseMap.items():
-            if len(cheeonPos & head.pos) > 0:
-                print("head is C", head)
-                # continue
+            # if len(cheeonPos & head.pos) > 0:
+            #     print("head is C", head)
+            #     # continue
 
             tags = []
 

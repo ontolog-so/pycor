@@ -1,7 +1,7 @@
 import re
 import os
 import pycor.speechmodel as sm
-from pycor import langmodel, korutils, scoring, classifier
+from pycor import langmodel, korutils, scoring, classifier, resolver
 
 class Quote:
     def __init__(self,start,end):
@@ -294,17 +294,21 @@ class WordParser:
 #################################################
 class SentenceParser:
     def __init__(self, wordparser=WordParser(), quoteclues=_quoteclues, equivalentclues=_equivalentclues , 
-        scorefunc=scoring.default_scorepair, classifyfunc=classifier.def_classify, wordMap=None):
-        self._initimpl(wordparser, quoteclues, equivalentclues, scorefunc, classifyfunc, wordMap)
+        scorefunc=scoring.default_scorepair, classifyfunc=classifier.def_classify, 
+        resolvesentencefunc=resolver.def_resolvesentence, wordMap=None):
+        self._initimpl(wordparser, quoteclues, equivalentclues, scorefunc, classifyfunc, 
+            resolvesentencefunc , wordMap)
         self.verbose = False
         self.resolvers = []
         
-    def _initimpl(self, wordparser, quoteclues, equivalentclues, scorefunc, classifyfunc, wordMap=None):
+    def _initimpl(self, wordparser, quoteclues, equivalentclues, scorefunc, 
+            classifyfunc, resolvesentencefunc, wordMap=None):
         if wordMap is None:
             wordMap = sm.WordMap()
         self.wordmap = wordMap
         self.scorefunction = scorefunc
         self.classifyfunction = classifyfunc
+        self.resolvesentencefunc = resolvesentencefunc
         self.wordparser = wordparser
         self.quoteclues = quoteclues
         self.equivalentclues = equivalentclues
@@ -497,26 +501,23 @@ class SentenceParser:
         return word
 
     def resolveDocument(self, sentence_array, context=None):
-        words_array = self.scoreDocument(sentence_array)
+        if context is None:
+            context = self.wordmap
+
+        words_array = []
+        for sentence in sentence_array:
+            words = self.scoreSentence(sentence)
+            self.resolveSentence(sentence, words, context)
+            words_array.append(words)
 
         self._doresolver(sentence_array, context)
 
         return words_array
 
-    def _doresolver(self, sentence_array, context=None):
-        if context is None:
-            context = self.wordmap
-            
+    def _doresolver(self, sentence_array, context):
         for resolver in self.resolvers:
             resolver.resolveDocument(sentence_array, context)
 
-    def scoreDocument(self, sentence_array) :
-        words_array = []
-        for sentence in sentence_array:
-            words_array.append(self.scoreSentence(sentence))
-        
-        return words_array
-        
     def scoreSentence(self, sentence) :
         words = []
 
@@ -532,9 +533,12 @@ class SentenceParser:
         
         return words
 
-    def classifyHeads(self,word):
+    def resolveSentence(self, sentence, words, context):
+        self.resolvesentencefunc(sentence, words, context)
+
+    def classifyHeads(self,word, force=True):
         for pair in  word.particles:
-            self.classifyfunction(pair.head, True)
+            self.classifyfunction(pair.head, force)
 
     def scoreword(self, word, prevWords=None, nextWords=None, force=False) :
         if word.bestpair and not(force):
@@ -543,7 +547,7 @@ class SentenceParser:
         if len(word.particles) > 0:
             maxPart = None
             for part in word.particles:
-                self.scorefunction(part, word, self.wordmap)
+                self.scorefunction(part, word, self.wordmap, prevWords, nextWords)
                 
                 if maxPart:
                     if part.score > maxPart.score:

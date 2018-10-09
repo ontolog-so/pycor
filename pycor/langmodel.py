@@ -274,6 +274,9 @@ class Worm:
     
     
     def addPre(self, worm):
+        if worm is None:
+            return self
+
         for t in worm.tokens:
             bag = self.precedents.get(t)
             if bag is None:
@@ -283,6 +286,9 @@ class Worm:
         return self
     
     def addPres(self, worms):
+        if worms is None:
+            return self
+
         for worm in worms:
             if type(worm) is list:
                 self.addPres(worm)
@@ -503,6 +509,21 @@ class Aux(Worm):
         
         return getStems(token)
 
+
+class PosAux(Aux):
+    def __init__(self, tokens, atag=None, precedents = None, constraints = [], 
+        score=0, escapeFirst=True, ambi=False, pos=None):
+        super().__init__( tokens, atag, precedents , constraints , score, escapeFirst,ambi,pos )
+        
+    def __repr__(self):
+        return "TagAux["+ ','.join(str(s) for s in self.tokens) +"] " + str(self.atag)
+    
+    def _procedeImpl(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
+        if not self.isOnlyAfter():
+            if prevPair:
+                prevPair.addpos(self.pos)
+        
+        return None
 
 class MultiSyllablesAux(_MultiSyllablesWorm) :
     def __repr__(self):
