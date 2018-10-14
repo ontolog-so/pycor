@@ -158,9 +158,10 @@ class ConstraintFirst(lm.Constraint):
 ##################################################
 # 종성 어미 뒤에 오는 어미 
 class WithJongsungAux(lm.Aux) :
-    def __init__(self, tokens, jongsungs,  atag=None, precedents = None, constraints = [], score=0, escapeFirst=True, ambi=False):
+    def __init__(self, tokens, jongsungs,  atag=None, precedents = None, constraints = [], score=0, 
+        escapeFirst=True, ambi=False):
         self._set( tokens, atag, precedents , constraints , score, escapeFirst,ambi )
-        self.constraints.append(ConstraintAfterJongsung(jongsungs))
+        # self.constraints.append(ConstraintAfterJongsung(jongsungs))
         self.jongsungs = jongsungs
         
     def _procedeImpl(self,wordTokens, followingAux, wordObj, prevPair, prevWord, nextWord):
@@ -173,7 +174,7 @@ class WithJongsungAux(lm.Aux) :
                 removed = korutils.removeJongsung(prevStr)
                 head = ''.join([wordTokens.head(wordTokens.curidx-1), removed])
                 tail = ''.join([final, wordTokens.tail()])
-                return sm.Pair(head, tail, self.score).addtags(self.getTag(prevPair))     
+                return sm.Pair(wordTokens.text, head, tail, self.score).addtags(self.getTag(prevPair))     
         return None
     
 # 종성 어미  
@@ -192,7 +193,7 @@ class JongsungAux(lm.Aux) :
                 removed = korutils.removeJongsung(curStr)
                 head = ''.join([wordTokens.head(wordTokens.curidx), removed])
                 tail = ''.join([final, wordTokens.tail(wordTokens.curidx+1)])
-                return sm.Pair(head, tail, self.score).addtags(self.getTag(prevPair)) 
+                return sm.Pair(wordTokens.text, head, tail, self.score).addtags(self.getTag(prevPair)) 
                 
         return None
 
@@ -214,7 +215,7 @@ class MultiCharsAux(lm.Aux) :
         toIdx = wordTokens.curidx - gap
         wordTokens.setPos(toIdx)
 
-        return sm.Pair(wordTokens.head(), wordTokens.tail(), self.score).addtags(self.getTag(prevPair)) 
+        return sm.Pair(wordTokens.text, wordTokens.head(), wordTokens.tail(), self.score).addtags(self.getTag(prevPair)) 
     
 
 #############################
@@ -233,7 +234,7 @@ class TransformedAux(lm.Aux) :
             head = ''.join([wordTokens.head(wordTokens.curidx), self.head])
             tail = ''.join([self.tail, wordTokens.tail(wordTokens.curidx+1)])
             #print("TransformedAux2 head=", head, ", tail=", tail)
-            return sm.Pair(head, tail, self.score).addtags(self.getTag(prevPair)) 
+            return sm.Pair(wordTokens.text, head, tail, self.score).addtags(self.getTag(prevPair)) 
         return None
 
 #############################
@@ -253,7 +254,7 @@ class IrregularAux(lm.Aux) :
             prevStr = korutils.addJongsung(prevStr, self.headJongsung)
             head = ''.join([wordTokens.head(wordTokens.curidx-1), prevStr])
             tail = ''.join([self.tail, wordTokens.tail(wordTokens.curidx+1)])
-            return sm.Pair(head, tail, self.score).addtags(self.getTag(prevPair))    
+            return sm.Pair(wordTokens.text, head, tail, self.score).addtags(self.getTag(prevPair))    
         return None
 
 #############################
@@ -270,5 +271,5 @@ class TransformedStem(lm.Stem) :
         if korutils.isKor(curStr):
             head = ''.join([wordTokens.head(wordTokens.curidx), self.head])
             tail = wordTokens.tail(wordTokens.curidx+1)
-            return sm.Pair(head, tail, self.score).addtags(self.getTag(prevPair)).addpos(self.pos)      
+            return sm.Pair(wordTokens.text, head, tail, self.score).addtags(self.getTag(prevPair)).addpos(self.pos)      
         return None

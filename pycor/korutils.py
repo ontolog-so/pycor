@@ -81,4 +81,15 @@ def compose(cho , jung, jong=u'') :
     c = phoneme_final.index(jong)    
     return chr(0xAC00 + a * 21 * 28 + b * 28 + c)
 
+'''
+head + tail
+'''
+def concat(head , tail) :
+    if tail is None or len(tail) == 0:
+        return head
+    elif tail[0] in phoneme_final:
+        last = addJongsung(head[len(head)-1],tail[0])
+        return "".join([head[:len(head)-1], last, tail[1:]])
+    else:
+        return "".join([head,tail])
     

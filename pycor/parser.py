@@ -191,7 +191,7 @@ class WordParser:
         word = wordObj.text
         if word in self.singlemap:
             sng = self.singlemap[word]
-            pair = sm.Pair(word, None).addpos(sng.atag).addtags(sng.atag)
+            pair = sm.Pair(word,word, None).addpos(sng.atag).addtags(sng.atag)
             self.digest_pair(None, wordObj, pair, wordmap)
             pair.head.addpos(sng.atag)
         else :
@@ -201,7 +201,7 @@ class WordParser:
                 # word가 heads맵에 이미 등록된 경우 
                 head = wordmap.heads[word]
                 if head.score>0:
-                    pair = sm.Pair(word, None)
+                    pair = sm.Pair(word,word, None)
                     self.digest_pair(None, wordObj, pair, wordmap)
                     return
                 else:
@@ -217,9 +217,10 @@ class WordParser:
             # 0.0.7 zeroPair 
             zeroPair = None
             worms = self.getAuxs(token)
-            if worms is None or fromLast:
+
+            if fromLast:
                 head = wordObj.text
-                zeroPair = sm.Pair(head, None, 0)
+                zeroPair = sm.Pair(wordTokens.text, head, None, 0)
                 pairs.append(zeroPair)
 
             if worms:
@@ -230,6 +231,11 @@ class WordParser:
                         pairs.extend(headtails)
                     wordTokens.setPos(curidx)
             
+            if len(pairs) == 0:
+                head = wordObj.text
+                zeroPair = sm.Pair(wordTokens.text,head, None, 0)
+                pairs.append(zeroPair)
+
             for pair in pairs:
                 self.digest_pair(wordTokens, wordObj, pair, wordmap)
 
@@ -241,8 +247,7 @@ class WordParser:
         if pair is None or pair.head is None:
             #헤드 값이 없으면 그냥 skip
             return
-        
-        
+            
         h = pair.head.upper() # 영문의 경우 대문자로 변화 
         head = wordmap.heads.get(h)
         if head is None:
@@ -342,8 +347,8 @@ class SentenceParser:
 
     def loadfile(self, path, context=None):
         sentence_array = self._loadfile(path)
-        words_array = self.resolveDocument(sentence_array, context)
-        return sentence_array, words_array
+        self.resolveDocument(sentence_array, context)
+        return sentence_array
     
     def _loadfile(self, path):
         sentence_array = []
@@ -353,8 +358,7 @@ class SentenceParser:
             lines = file.readlines()
             
             for row in lines:
-                self._readrow(row,sentence_array,words_array)  
-                # sentence_array.extend(sentences)
+                self._readrow(row,sentence_array,words_array, isquote=False)  
                 words_array.clear()
             file.close()
         return sentence_array
@@ -383,25 +387,25 @@ class SentenceParser:
         words_array = []
 
         for row in text.splitlines():
-                self._readrow(row,sentence_array,words_array)  
+                self._readrow(row,sentence_array,words_array, isquote=False)  
                 words_array.clear()
         
-        words_array = self.resolveDocument(sentence_array,context)
-        return sentence_array, words_array
-
-    ########################
-    #  라인별 읽기 
-    ########################
-    def readrow(self,text):
-        sentence_array = []
-        words_array = []
-        self._readrow(text, sentence_array, words_array)
+        self.resolveDocument(sentence_array,context)
         return sentence_array
 
     ########################
     #  라인별 읽기 
     ########################
-    def _readrow(self,text, sentence_array, words_array):
+    def readrow(self,text, isquote=False):
+        sentence_array = []
+        words_array = []
+        self._readrow(text, sentence_array, words_array, isquote)
+        return sentence_array
+
+    ########################
+    #  라인별 읽기 
+    ########################
+    def _readrow(self,text, sentence_array, words_array, isquote):
         length = len(text)
         index = 0
         word = ''
@@ -416,13 +420,13 @@ class SentenceParser:
                 word = ''
 
                 if end > index:
-                    arr = self.readrow(text[index+1:end])
+                    arr = self.readrow(text[index+1:end],isquote=True)
                     
                     if ch in self.equivalentclues:
                         if len(arr) > 1:
                             words_array.extend(arr)
                         elif len(arr) == 1:
-                            arr[0].senttype = sm.SENTENCE_TYPE_EQUIV
+                            arr[0].quotetype = sm.QUOTE_TYPE_EQUIV
                             words_array.append(arr[0])
                     else:
                         words_array.extend(arr)
@@ -464,16 +468,20 @@ class SentenceParser:
             words_array.append(word)
 
         if len(words_array) > 0:
-            sent = self._buildsentence(words_array)
+            sent = self._buildsentence(words_array, isquote)
             sentence_array.append(sent)
 
         return sentence_array
 
     
     # words_array를 기반으로 Word 객체 생성하고  Sentence 생성  
-    def _buildsentence(self, words_array):
+    def _buildsentence(self, words_array, isquote=False):
         sentence = sm.Sentence()
-        
+        if isquote:
+            sentence = sm.Quote()
+        else:
+            sentence = sm.Sentence()
+
         wlength = len(words_array)
         windex  = 0
         while windex < wlength:
@@ -503,38 +511,28 @@ class SentenceParser:
     def resolveDocument(self, sentence_array, context=None):
         if context is None:
             context = self.wordmap
-
-        words_array = []
         for sentence in sentence_array:
-            words = self.scoreSentence(sentence)
-            self.resolveSentence(sentence, words, context)
-            words_array.append(words)
+            self.scoreWordGroup(sentence)
+            self.resolveSentence(sentence, context)
 
         self._doresolver(sentence_array, context)
-
-        return words_array
 
     def _doresolver(self, sentence_array, context):
         for resolver in self.resolvers:
             resolver.resolveDocument(sentence_array, context)
 
-    def scoreSentence(self, sentence) :
-        words = []
+    def resolveSentence(self, sentence, context):
+        self.resolvesentencefunc(sentence, context)
 
-        for index, word in enumerate(sentence.words):
-            if type(word) is sm.Sentence:
-                words.extend(self.scoreSentence(word))
+    def scoreWordGroup(self, wordgroup) :
+        for index, word in enumerate(wordgroup.words):
+            if issubclass(type(word), sm.WordGroup):
+                self.scoreWordGroup(word)
             else :
-                prevWords = sentence.words[:index]
-                nextWords = sentence.words[index+1:]
+                prevWords = wordgroup.words[:index]
+                nextWords = wordgroup.words[index+1:]
                 self.classifyHeads(word)
                 self.scoreword(word, prevWords, nextWords, force=True)
-                words.append(word)
-        
-        return words
-
-    def resolveSentence(self, sentence, words, context):
-        self.resolvesentencefunc(sentence, words, context)
 
     def classifyHeads(self,word, force=True):
         for pair in  word.particles:
@@ -544,7 +542,9 @@ class SentenceParser:
         if word.bestpair and not(force):
             return
 
-        if len(word.particles) > 0:
+        if len(word.particles) == 0:
+            raise Exception("No Pair", word.text)
+        else:
             maxPart = None
             for part in word.particles:
                 self.scorefunction(part, word, self.wordmap, prevWords, nextWords)
@@ -564,9 +564,13 @@ class SentenceParser:
             score = maxPart.score
             
             if maxPart.head:
-                # hscore = maxPart.head.score + score
-                # maxPart.head.score = hscore /2
-                maxPart.head.score = maxPart.head.score + score
+                # hscore = maxPart.head.score 
+                # if maxPart.head.score > 0:
+                #     hscore += score / maxPart.head.score
+                # else:
+                #     hscore += score
+                # maxPart.head.score = hscore
+                maxPart.head.score += score
                 maxPart.head.addpos(maxPart.pos)
 
             if maxPart.tail and maxPart.tail != sm._VOID_Tail:

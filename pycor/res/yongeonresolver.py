@@ -15,28 +15,28 @@ class YongeonResolver(resolver.Resolver):
 
     def resolveDocument(self, sentence_array, context):
         for sentence in sentence_array:
-            self.resolveSentence(sentence, context, self.phraseMap,self.tagsetIndex)
+            self.resolveWordGroup(sentence, context, self.phraseMap,self.tagsetIndex)
         
-    def resolveSentence(self,sentence, context, phraseMap, tagsetIndex):
-        for index, word in enumerate(sentence.words):
-            if type(word) is sm.Sentence :
-                self.resolveSentence(word, context, phraseMap,tagsetIndex)
+    def resolveWordGroup(self,sentence, context, phraseMap, tagsetIndex):
+        for index, pair in enumerate(sentence.pairs):
+            if issubclass(type(pair), sm.WordGroup):
+                self.resolveWordGroup(pair, context, phraseMap,tagsetIndex)
             else:
-                if word.bestpair and len(yongeonTags & set(word.bestpair.tags))>0 and len(cheeonTags & set(word.bestpair.tags))==0:
+                if len(yongeonTags & set(pair.tags))>0 and len(cheeonTags & set(pair.tags))==0:
 
-                    if len(cheeonPos & word.bestpair.head.pos) > 0:
+                    if len(cheeonPos & pair.head.pos) > 0:
                         continue
 
-                    pmap = phraseMap.get(word.bestpair.head)
+                    pmap = phraseMap.get(pair.head)
                     if pmap is None:
                         pmap = {}
-                        phraseMap[word.bestpair.head] = pmap
+                        phraseMap[pair.head] = pmap
 
                     phrase = []
                     texts = []
                     tags = []
                     # phrase.append(word)
-                    texts.append(word.text)
+                    texts.append(pair.text)
 
                     if index > 1:
                         prev = sentence.words[index-1]
@@ -67,7 +67,7 @@ class YongeonResolver(resolver.Resolver):
                     if tagsetIndex.get(tagtext) is None:
                         headset = set()
                         tagsetIndex[tagtext] = headset
-                    headset.add(word.bestpair.head)
+                    headset.add(pair.head)
 
     def clssifyYongEon(self):
         for head, pmap in self.phraseMap.items():

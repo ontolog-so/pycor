@@ -2,19 +2,25 @@ import pycor.speechmodel as sm
 from pycor import langmodel, korutils 
 
 
-def printSentences(sentence_array):
-    for sentence in sentence_array:
-        for word in sentence:
-            print(word.text, end=" ")
+def printSentences(sentences):
+    for sentence in sentences:
+        _printWordGroup(sentence)
         print()
 
-def getKeywords(words):
+def _printWordGroup(wordgroup):
+    for pair in wordgroup.pairs:
+        if issubclass(type(pair), sm.WordGroup):
+            _printWordGroup(pair)
+        else :
+            print(pair.text ,end=" ")
+
+def getKeywords(wordgroup):
     kwdset = set()
-    for word in words:
-        if word.bestpair:
-            kwdset.add(word.bestpair.head.text)
+    for pair in wordgroup.pairs:
+        if issubclass(type(pair), sm.WordGroup):
+            kwdset.update( getKeywords(pair) )
         else:
-            kwdset.add(word.text)
+            kwdset.add(pair.head.text)
     return kwdset
 
 class SentenceWrap:
@@ -35,43 +41,51 @@ class KeywordUtils:
     def setwordmap(self, wordmap):
         self.wordmap = wordmap
     
-    def extractKeywords(self,words_array, rate=0.05):
+    def __countHeadInSentence(self, sentence, countmap):
+        for pair in sentence.pairs :
+            if issubclass(type(pair), sm.WordGroup):
+                self.__countHeadInSentence(pair,countmap)
+            else:
+                head = pair.head
+                if len (self.ESC_WORDCOUNT_TAGS & head.pos) > 0:
+                    continue
+                # head.freq()
+                count = countmap.get(head)
+                if count:
+                    count += 1
+                else:
+                    count = 1
+                countmap[head] = count
+        
+    def extractKeywords(self, sentence_array, rate=0.05):
         countmap = {}
+        for sentence in sentence_array:
+            self.__countHeadInSentence(sentence,countmap)
+
         total = 0
         maxcnt = 0
-        for words in words_array:
-            for word in words :
-                if word.bestpair:
-                    head = word.bestpair.head
-                    if len (self.ESC_WORDCOUNT_TAGS & head.pos) > 0:
-                        continue
-                    # head.freq()
-                    count = countmap.get(head)
-                    if count:
-                        count += 1
-                    else:
-                        count = 1
-                    countmap[head] = count
-                    if count > maxcnt:
-                        maxcnt = count
-                    total += 1
 
+        for count in countmap.values():
+            total += count
+            if count > maxcnt:
+                maxcnt = count
+        
         avg = (total / len(countmap)) 
         threashold = (maxcnt - avg) * rate + avg
 
+        print("[countmap]", countmap)
         selected = {}
         for head, count in countmap.items():
             if head.frequency> 0 and head.occurrence()>1:
                 if count >= threashold  or (count/head.frequency > rate*10) :
                     selected[head] = count 
+        print("[selected]", selected)
         return selected
 
     def filterSentence(self, sentence, keywords):
         hasEFN = False
-        for word in sentence:
-            pair = word.bestpair
-            
-            if pair:
+        for pair in sentence.pairs:
+            if type(pair) is sm.Pair:
                 hasEFN = ('EFN' in pair.tags or 'JKP' in pair.tags)
                 if hasEFN:
                     break
@@ -81,7 +95,18 @@ class KeywordUtils:
         
         return sentence
 
-    def abstractDocument(self, keywords, words_array , sentenceCount=3):
+    def __countHeadInKeywords(self, keywords, wordgroup):
+        count = 0
+        for pair in wordgroup.pairs:
+            if issubclass(type(pair), sm.WordGroup):
+                self.__countHeadInKeywords(keywords, pair)
+            else:
+                head = pair.head
+                if head in keywords:
+                    count += keywords[head]
+        return count
+
+    def abstractDocument(self, keywords, sentences , sentenceCount=3):
         kwdLen = len(keywords)
         # threashold = int(kwdLen/rate)
         # if(threashold>4):
@@ -89,13 +114,8 @@ class KeywordUtils:
 
         sentenceWrapList = []
 
-        for index, sentence in enumerate(words_array):
-            count = 0
-            for word in sentence:
-                if word.bestpair:
-                    head = word.bestpair.head
-                    if head in keywords:
-                        count += keywords[head]
+        for index, sentence in enumerate(sentences):
+            count = self.__countHeadInKeywords(keywords, sentence)
             
             sent = self.filterSentence(sentence, keywords)
             if sent:

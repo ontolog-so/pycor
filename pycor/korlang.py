@@ -1,5 +1,6 @@
 
 from pycor import trainer, parser, keywordutils, utils, korutils, resolver
+import pycor.speechmodel as sm
 from pycor.std import *
 
 __all__ = ["getmodel", "setmodel", "loadmodel", "loaddic", "savemodel","addresolver", "removeresolver",
@@ -112,41 +113,42 @@ def trim(text):
     """
     return words_array (2d), tags_array(2d)
     """
-    _, words_array = _trainer.readtext(text)
-    return __trim(words_array)
+    sentences = _trainer.readtext(text)
+    return __trim(sentences)
 
 def trimfile(filepath):
     """
     return words_array (2d), tags_array(2d)
     """
-    _, words_array = _trainer.loadfile(filepath)
-    return __trim(words_array)
+    sentences = _trainer.loadfile(filepath)
+    return __trim(sentences)
 
-def __trim(words_array):
+def __trim(sentences):
     rtns_array = []
     tags_array = []
-    for sentence in words_array:
+    for sentence in sentences:
+        __trimwordgroup(sentence, rtns_array, tags_array)
+    return rtns_array,tags_array
+
+def __trimwordgroup(wordgroup, rtns_array, tags_array):
         words = []
         tags = []
-        for word in sentence:
-            if word.bestpair:
-                if len(ESC_TAGS & word.bestpair.head.pos) == 0:
-                    words.append(word.bestpair.head.text)
-                    tags.append(word.bestpair.tags)
-            else:
-                words.append(word.text)
-                tags.append([])
+        for pair in wordgroup.pairs:
+            if issubclass(type(pair), sm.WordGroup):
+                __trimwordgroup(pair, rtns_array, tags_array)
+            elif len(ESC_TAGS & pair.head.pos) == 0:
+                words.append(pair.head.text)
+                tags.append(pair.tags)
+                
         if len(words)>0:
             rtns_array.append(words)
             tags_array.append(tags)
-    return rtns_array,tags_array
 
-
-def keywords(words_array, rate=0.05):
+def keywords(sentence_array, rate=0.05):
     """
     return dictionary {keywod:count,...}
     """
-    return _keywordutils.extractKeywords(words_array,rate)
+    return _keywordutils.extractKeywords(sentence_array,rate)
 
 
 def keywordsFromText(text, rate=0.05):
@@ -158,18 +160,18 @@ def keywordsFromText(text, rate=0.05):
     return _keywordutils.extractKeywords(words_array,rate)
 
 
-def abstractKeywords(words_array, rate=0.05, count=3):
+def abstractKeywords(sentences, rate=0.05, count=3):
     """
     param rate : 0~1 사이의 float, 기본값 0.05
     param count : 문장 개수  , 기본값 3
     return keywords, sentences
     """
-    keywords = _keywordutils.extractKeywords(words_array, rate)
+    keywords = _keywordutils.extractKeywords(sentences, rate)
     if len(keywords) < 1:
         rate /= 2
-        keywords = _keywordutils.extractKeywords(words_array, rate)
+        keywords = _keywordutils.extractKeywords(sentences, rate)
 
-    sentences = _keywordutils.abstractDocument(keywords, words_array, count)
+    sentences = _keywordutils.abstractDocument(keywords, sentences, count)
     return keywords, sentences
 
 
@@ -179,19 +181,26 @@ def abstract(text, rate=0.05, count=3):
     param count : 문장 개수 , 기본값 3
     return keywords, sentences
     """
-    _,words_array = readtext(text)
-    return abstractKeywords(words_array,rate, count)
+    sentences = readtext(text)
+    return abstractKeywords(sentences,rate, count)
 
 def printSentences(sentences):
     keywordutils.printSentences(sentences)
 
-# line단위 텍스트로 변환
+# 여러 Sentence객체들을 문장 단위 텍스트 배열로 변환
 # return string array
 def totexts(sentences):
     lines = []
     for sentence in sentences:
-        aline =[]
-        for word in sentence:
-            aline.append(word.text)
-        lines.append(' '.join(aline))
+        line = _wordgrouptotexts(sentence)
+        lines.append(line)
     return lines
+
+def _wordgrouptotexts(wordgroup):
+    aline =[]
+    for pair in wordgroup.pairs:
+        if issubclass(type(pair), sm.WordGroup):
+            aline.append( _wordgrouptotexts(pair) )
+        else:
+            aline.append( pair.text )
+    return ' '.join(aline)

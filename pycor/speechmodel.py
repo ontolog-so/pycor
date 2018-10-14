@@ -6,7 +6,7 @@
 import re
 import time
 import csv
-import pycor.korutils
+import pycor.korutils as korutils
 
 
 def sortParticle(particle):
@@ -39,7 +39,8 @@ class Word:
         del self.prevnexts[:]
 
 class Pair:
-    def __init__(self,head, tail, score=0.0, ambi=False):
+    def __init__(self, text, head, tail, score=0.0, ambi=False):
+        self.text = text
         self.head = head
         self.tail = tail
         self.score = score
@@ -81,8 +82,11 @@ class PrevNext:
 class WordGroup:
     def __init__(self):
         self.words = [] 
+        self.pairs = []
+        self.grptype = None
+        
     def type(self):
-        return "S"
+        return "WG"
     
     def text(self):
         text = ''
@@ -97,24 +101,21 @@ class WordGroup:
         #print ("append ", type(word) , word)
         self.words.append(word)
 
+    def addpair(self, pair):
+        self.pairs.append(pair)
 
-SENTENCE_TYPE_QUOTE = 'QUOTE'
-SENTENCE_TYPE_EQUIV = 'EQUIV'
+QUOTE_TYPE_EQUIV = 'EQUIV'
+
+class Quote(WordGroup):
+    def __init__(self):
+        super().__init__()
+        self.grptype = "Q"
+        self.quotetype = None
 
 class Sentence(WordGroup):
     def __init__(self):
         super().__init__()
-        self.senttype = None
-    
-    
-
-
-# class Document:
-#     def __init__(self, sentence_array, words_array):
-#         self.sentence_array = sentence_array 
-#         self.words_array = words_array
-
-
+        self.grptype = "S"
 
 
 ########################
@@ -295,14 +296,14 @@ class WordMap :
             word = Word(text)
             head = self.getOrNewHead(text)
             head.addpos(pos)
-            pair = word.addPair(Pair(head,_VOID_Tail))
+            pair = word.addPair(Pair(text,head,_VOID_Tail))
             word.bestpair = pair
             self.words[text] = word
         elif word.bestpair:
             if word.bestpair.tail != _VOID_Tail:
                 head = self.getOrNewHead(text)
                 head.addpos(pos)
-                pair = word.addPair(Pair(head,_VOID_Tail))
+                pair = word.addPair(Pair(text,head,_VOID_Tail))
                 word.bestpair = pair
         else:
             for pair in word.particles:
@@ -311,7 +312,7 @@ class WordMap :
                     return word
             head = self.getOrNewHead(text)
             head.addpos(pos)
-            pair = word.addPair(Pair(head,_VOID_Tail))
+            pair = word.addPair(Pair(text,head,_VOID_Tail))
             word.bestpair = pair
         return word
     

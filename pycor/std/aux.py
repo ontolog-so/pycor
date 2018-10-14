@@ -26,7 +26,7 @@ auxRyeo = lm.regAux('려')
 auxRyeoTr = lm.regAux(klm.TransformedAux('려','리','어')).ambiguous()
 auxRyeot = klm.TransformedAux('렸','리','었').tag("EPT-pp" )
 auxDoae = lm.regAux( klm.TransformedAux('돼','되','어') ).ambiguous()
-auxHae = lm.regAux( klm.TransformedAux('해','하', 'ㅣ') ).ambiguous()
+auxHae = lm.regAux( klm.TransformedAux('해','하', 'ㅣ') ).ambiguous().setscore(-1)
 auxJieo = lm.regAux( klm.TransformedAux('져','지','어').after([auxHae]) ).ambiguous()
 auxGieEo = lm.regAux( klm.TransformedAux('겨','기','어')).ambiguous()
 auxChiEo = lm.regAux( klm.TransformedAux('쳐','치','어')).ambiguous()
@@ -70,7 +70,8 @@ stemAuxHa = lm.regAux(lm.StemAux('하'))
 # 미래 (의지)	-(으)리-	읽으리라, 밟으리라, 참으리라
 #----------------------------------
 eptNeun = lm.Aux('는').tag("EPT-pr")
-#eptN  = klm.buildJongsungAux('ㄴ').tag("EPT-pr")
+eptN  = klm.buildJongsungAux('ㄴ').tag("EPT-pr")
+eptN.escapeFirst = False
 eptAt = lm.Aux('았').tag("EPT-pp").incase([afterJongsung,afterPositiveVowel])
 eptEot = lm.Aux('었').tag("EPT-pp")
 eptYeot = lm.Aux('였').tag("EPT-pp") #.incase(lm.onlyAfter).after(stemAuxHa)
@@ -178,7 +179,7 @@ eptDeo.after([eptEot, eptGet2])
 # -(으)ㅁ, -기
 ###################################
 etnEum = lm.regAux(lm.PosAux('음')).setpos("CY").incase(afterJongsung)
-etnM = lm.regAux(lm.PosAux(['함','됨','짐'])).setpos("CY").ambiguous()
+etnM = lm.regAux(lm.PosAux(['함','됨','짐','쁨','픔'])).setpos("CY").ambiguous()
 etnGi = lm.regAux(lm.PosAux('기')).setpos("CY").ambiguous()
 
 etnIm = lm.Aux(['임']).tag("ETN").tag("JKP")
@@ -192,11 +193,11 @@ etnIm = lm.Aux(['임']).tag("ETN").tag("JKP")
 ###################################
 etmEun = lm.regAux('은').tag("ETM").incase(afterJongsung).after([etnEum, etnM]) 
 etmNeun = lm.regAux('는').tag("ETM").after([etnGi, eptPasts]) 
-etmIn = lm.regAux('인').tag("ETM+JKP")
-etmIl = lm.regAux('일').tag("ETM+JKP")
-etmN = lm.regAux(klm.JongsungAux(['린','된','한','친','낸','룬','선','른','춘','진' ], 'ㄴ')).tag("ETM").ambiguous()
+etmIn = lm.regAux('인').tag("ETM+JKP").ambiguous()
+etmIl = lm.regAux('일').tag("ETM+JKP").ambiguous()
+etmN = lm.regAux(klm.JongsungAux(['린','된','한','친','낸','룬','선','른','춘','진','쁜','픈' ], 'ㄴ')).tag("ETM").ambiguous()
 etmEul = lm.regAux('을').tag("ETM").incase(afterJongsung) 
-etmL = lm.regAux(klm.JongsungAux(['릴','될','할','칠','낼','룰','설','를','출','질' ], 'ㄹ')).tag("ETM").ambiguous()
+etmL = lm.regAux(klm.JongsungAux(['릴','될','할','칠','낼','룰','설','를','출','질','쁠','플' ], 'ㄹ')).tag("ETM").ambiguous()
 etmReul = lm.regAux('를').tag("ETM").incase(afterVowel) 
 
 etmSiKin = lm.regAux(klm.JongsungAux('킨', 'ㄴ')).tag("ETM").incase(lm.ConstraintAfter('시'))
@@ -234,8 +235,7 @@ etaDoRok = lm.regMultiSyllablesAux('도록').tag("ETA").incase(constraintsHaJiDo
 # -란다
 ###################################
 efnDa = lm.regAux('다').tag("EFN").after([
-        klm.buildJongsungAux('ㄴ'),
-        eptNeun
+        eptN, eptNeun
         ])
 
 efnNiDa = lm.regMultiSyllablesAux('니다').tag("EFN").after([
@@ -666,7 +666,8 @@ jkbBoDa = lm.regMultiSyllablesAux('보다').tag("JKB-CM").after([etnEum, etnM,et
 # JKB-AS 위격 조사: (으)로(서)
 # JKB-BY  도구격 조사: (으)로(써)
 ###################################
-jkbEuRo = lm.regAux('로').tag("JKB-TT|AS|BY").after([auxEu,etnGi])
+jkbRoOnly = lm.regAux('로').tag("JKB-TT|AS|BY").ambiguous()
+jkbEuRo = lm.regAux('로').tag("JKB-TT|AS|BY").incase(lm.onlyAfter).after([auxEu,etnGi])
 jkbRoSeo = lm.regMultiSyllablesAux('로서').tag("JKB-AS")
 jkbEuRoSeo = lm.regMultiSyllablesAux('으로서').tag("JKB-AS")
 jkbEuRoSseo = lm.regMultiSyllablesAux('으로써').tag("JKB-BY").after([etnEum, etnM,etnGi])
@@ -733,7 +734,7 @@ jxNeun = lm.regAux('는').tag("JX-SO").incase([afterVowel,final]).after([etnGi])
 jxN = lm.regAux(klm.JongsungAux(['난,넌,린'], jongsungs="ㄴ")).tag("JX-SO").incase([afterVowel,final])
 jxDo = lm.regAux('도').tag("JX-SO").incase([final])
 
-jxDo.after([jkbESeo,jkbE_at,jkbE_to,jkbEGe,jkbEuRo,jkqGo,efqGa, efqNya, efqJi, etnGi])
+jxDo.after([jkbESeo,jkbE_at,jkbE_to,jkbEGe,jkbEuRo,jkbRoOnly,jkqGo,efqGa, efqNya, efqJi, etnGi])
 jxNeun.after([efqGa, efqNya, efqJi])
 
 #----------------------------------
@@ -745,9 +746,9 @@ jxMaDa = lm.regMultiSyllablesAux('마다').tag("JX").after([etnEum, etnM,etnGi])
 jxJoCha = lm.regMultiSyllablesAux('조차').tag("JX").after([etnEum, etnM,etnGi])
 
 # ~에서도, ~에도, ~에게도, ~으로도, ~까지도, ~마저도 , ~조차도 , ~(으)로도
-jxDo.after([jkbESeo,jkbE_at,jkbE_to,jkbEGe,jkbEuRo,jxGgaJi,jxMaJeo,jxJoCha,jkbEuRo])
+jxDo.after([jkbESeo,jkbE_at,jkbE_to,jkbEGe,jkbEuRo,jkbRoOnly, jxGgaJi,jxMaJeo,jxJoCha])
 # ~에서조차, ~에조차, ~에게조차, ~으로조차,
-jxJoCha.after([jkbESeo,jkbE_at,jkbE_to,jkbEGe,jkbEuRo])
+jxJoCha.after([jkbESeo,jkbE_at,jkbE_to,jkbEGe,jkbEuRo,jkbRoOnly])
 #----------------------------------
 # JX 보조사 뿐/만
 #----------------------------------
@@ -897,31 +898,31 @@ etnEum.after(eptPasts)
 
 # ~에서의, ~부터의 , ~까지의, ~와의, ~고의, ~하고의 , ~에의 , ~으로의, ~로서의 , ~으로서의, ~으로써의 
 jkgEui.after([jkbESeo, jkbBuTeo,jxBuTeo, jxGgaJi, jcWa, jcGwa, 
-        jcHaGo, jkbE_to, jkbEuRo, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
+        jcHaGo, jkbE_to, jkbEuRo,jkbRoOnly, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
 
 # ~에서도, ~부터도 , ~까지도, ~와도, ~고도, ~하고도 , ~에도 , ~으로도, ~로서도 , ~으로서도, ~으로써도 
 ecDo.after([jkbESeo, jkbBuTeo,jxBuTeo, jxGgaJi, jcWa, jcGwa, 
-        jcHaGo, jkbE_to,jkbEuRo, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
+        jcHaGo, jkbE_to,jkbEuRo, jkbRoOnly, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
 
 # ~에서만 ~부터만 , ~야만 
-jxMan.after([jkbESeo,jkbEGe,jkbE_to, jkbBuTeo,jxBuTeo,jkbEuRo, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo, ecYa])
+jxMan.after([jkbESeo,jkbEGe,jkbE_to, jkbBuTeo,jxBuTeo,jkbEuRo, jkbRoOnly, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo, ecYa])
 
 # ~에서나 ~부터나 
-jxNa.after([jkbESeo,jkbEGe,jkbE_to, jkbEuRo, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
+jxNa.after([jkbESeo,jkbEGe,jkbE_to, jkbEuRo,jkbRoOnly, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
 
 # ~에서가, ~부터가 , ~까지가, ~와가 , ~에가 , ~으로가, ~로서가 , ~으로서가, ~으로써가
-jksGa.after([jkbESeo, jkbBuTeo,jxBuTeo, jxGgaJi, jcWa, jkbE_to, jkbEuRo, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
+jksGa.after([jkbESeo, jkbBuTeo,jxBuTeo, jxGgaJi, jcWa, jkbE_to, jkbEuRo,jkbRoOnly, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
 
 # ~에서보다, ~한테보다, ~부터보다 , ~까지보다, ~와보다 , ~에보다 , ~으로보다, ~로서보다 , ~으로서보다, ~으로써보다
-jkbBoDa.after([jkbESeo,jkbHante, jkbBuTeo,jxBuTeo, jxGgaJi, jcWa, jkbE_to, jkbEuRo, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
+jkbBoDa.after([jkbESeo,jkbHante, jkbBuTeo,jxBuTeo, jxGgaJi, jcWa, jkbE_to, jkbEuRo,jkbRoOnly, jkbRoSeo, jkbEuRoSeo, jkbEuRoSseo])
 
 
 # ~으로까지 , ~에서까지, ~에까지, 에게까지, 으로까지, ~기까지 
-jxGgaJi.after([jkbEuRo, jkbESeo,jkbE_at,jkbE_to,jkbEGe, jkbEuRo, etnGi])
+jxGgaJi.after([jkbEuRo, jkbRoOnly, jkbESeo,jkbE_at,jkbE_to,jkbEGe, etnGi])
 
 # ~와는 ... ~려는  ~으려는 
-jxNeun.after([jkbWa,jkbGwa,jksI,jkbE_to,jkbEGe,jkbGge,jkbHante,jkbESeo,jkbEGeSeo,jkbBuTeo,jxBuTeo,
-        jkbBoDa,jkbEuRo,jkbEuRoSeo,jkbRoSeo,jkbEuRoSseo,jkbE_at,jkbGatYi,jkqGo,jcHaGo,ecSeo, ecRyeo ])
+jxNeun.after([jkbWa,jkbGwa,jxGgaJi, jksI,jkbE_to,jkbEGe,jkbGge,jkbHante,jkbESeo,jkbEGeSeo,jkbBuTeo,jxBuTeo,
+        jkbBoDa,jkbEuRo,jkbRoOnly,jkbEuRoSeo,jkbRoSeo,jkbEuRoSseo,jkbE_at,jkbGatYi,jkqGo,jcHaGo,ecSeo, ecRyeo ])
 # ~이랑은 ~처럼은
 jxEun.after([jkbIRang,jkbCheoReom])
 

@@ -24,7 +24,6 @@ class CollocationContext(sm.ContextWrapper):
         self.collocations.clear()
 
 class CollocationResolver(resolver.Resolver):
-    
     def resolveDocument(self, sentence_array, context):
         cascadingContext = CollocationContext(context)
 
@@ -41,7 +40,8 @@ class CollocationResolver(resolver.Resolver):
         index = 0
 
         while index < end:
-            first, index = self.gettext(sentence, index, context, subsentence=True)
+            first, index = self.gettext(sentence, index, context)
+            
             if first is None:
                 continue
 
@@ -81,14 +81,13 @@ class CollocationResolver(resolver.Resolver):
         return sentence
 
 
-    def gettext(self, sentence, index, context, islast=False, subsentence=False):
+    def gettext(self, sentence, index, context, islast=False):
         word = sentence.words[index]
 
         if type(word) is sm.Sentence :
-            if subsentence:
-                self.resolveSentence(word, context)
-
-            if(word.senttype == sm.SENTENCE_TYPE_EQUIV):
+            self.resolveSentence(word, context)
+        elif type(word) is sm.Quote :
+            if(word.quotetype == sm.QUOTE_TYPE_EQUIV):
                 return word.text().upper(), index+1
             else:
                 return None, index+1

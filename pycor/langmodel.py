@@ -338,7 +338,7 @@ class Worm:
         if self.ambi and prevPair is None:
             # 0.0.7
             # 판단이 모호한 경우(ambiguous) + 이전 pair가 없는 경우  
-            ht = sm.Pair(wordTokens.head(wordTokens.curidx+1), None, self.score, self.ambi)
+            ht = sm.Pair(wordTokens.text, wordTokens.head(wordTokens.curidx+1), None, self.score, self.ambi)
             headtails.append( ht )
 
         if wordTokens.peekPrev() :
@@ -376,7 +376,7 @@ class Worm:
         # return (self.atag if self.atag else '') + ( "+" + prevPair.type if prevPair and prevPair.type else '')
 
     def _procedeImpl(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
-        return sm.Pair(wordTokens.head(), wordTokens.tail(), self.score).addpos(self.pos).addtags(self.getTag(prevPair))
+        return sm.Pair(wordTokens.text, wordTokens.head(), wordTokens.tail(), self.score).addpos(self.pos).addtags(self.getTag(prevPair))
 
     def getUpWorms(self,wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
         return None
@@ -498,7 +498,7 @@ class Aux(Worm):
     
     def _procedeImpl(self, wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
         if not self.isOnlyAfter():
-            return sm.Pair(wordTokens.head(), wordTokens.tail(), self.score).addtags(self.getTag(prevPair))
+            return sm.Pair(wordTokens.text,wordTokens.head(), wordTokens.tail(), self.score).addtags(self.getTag(prevPair))
 
     def getUpWorms(self,wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
         token = None
@@ -557,7 +557,7 @@ class Stem(Worm):
         score = self.score
         if prevPair:
             score += prevPair.score
-        return sm.Pair(wordTokens.head(idx), wordTokens.tail(idx), score).addtags(self.getTag(prevPair)).addpos(self.pos)
+        return sm.Pair(wordTokens.text, wordTokens.head(idx), wordTokens.tail(idx), score).addtags(self.getTag(prevPair)).addpos(self.pos)
 
 class MultiSyllablesStem(_MultiSyllablesWorm) :
     def __repr__(self):
@@ -618,7 +618,7 @@ class _InnerStemAux(Worm):
         score = self.score
         if prevPair:
             score += prevPair.score
-        return sm.Pair(wordTokens.head(idx), wordTokens.tail(idx), score).addtags(self.getTag(prevPair)).addpos(self.pos)
+        return sm.Pair(wordTokens.text,wordTokens.head(idx), wordTokens.tail(idx), score).addtags(self.getTag(prevPair)).addpos(self.pos)
 
     
 ############################################
@@ -644,7 +644,7 @@ class Suffix(Worm):
         if prevPair:
             score += prevPair.score
         
-        return sm.Pair(wordTokens.head(idx), wordTokens.tail(idx), score).addpos(self.pos)
+        return sm.Pair(wordTokens.text,wordTokens.head(idx), wordTokens.tail(idx), score).addpos(self.pos)
 
     def setProtoPos(self, pos):
         self.protoPos = pos
