@@ -12,12 +12,20 @@ def default_scorepair(pair, word, context, prevWords, nextWords):
 
     penalty = 0.0
 
+    # if pair.ambi:
+    #     hs += pair.head.score * 0.7
+    #     if pair.head.score<1:
+    #         penalty += 1 -pair.head.score
+    # else :
+    #     hs += pair.head.occurrence() * 0.1
+    
     if pair.ambi:
-        hs += pair.head.score * 0.7
+        # hs += pair.head.score * 0.7
         if pair.head.score<1:
             penalty += 1 -pair.head.score
-    else :
-        hs += pair.head.occurrence() * 0.1
+    # else :
+    #     hs += pair.head.occurrence() * 0.1
+
 
     ts = 0.0
     

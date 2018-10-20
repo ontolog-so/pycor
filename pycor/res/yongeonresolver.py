@@ -8,19 +8,41 @@ yongeonTags = set(['EFN'])
 cheeonTags = set(['JKP','JKP-pp','JKS'])
 cheeonPos = set(['C','NN','NP'])
 
+class Phrase:
+    def __init__(self):
+        self.words = []
+        self.pairs = []
+
+    def add(self, word, pair):
+        self.words.append(word)
+        self.pairs.append(pair)
+
+    def reverse(self):
+        self.words.reverse()
+        self.pairs.reverse()
+
+    def clear(self):
+        del self.words[:]
+        del self.pairs[:]
+
+
 class YongeonResolver(resolver.Resolver):
     def __init__(self, phraseMap={}):
         self.phraseMap = phraseMap
         self.tagsetIndex = {}
 
     def resolveDocument(self, sentence_array, context):
+        phrase = Phrase() 
         for sentence in sentence_array:
-            self.resolveWordGroup(sentence, context, self.phraseMap,self.tagsetIndex)
+            self.resolveWordGroup(sentence, context, self.phraseMap, self.tagsetIndex, phrase)
+            # print(phrase.pairs)
+            # phrase.clear()
         
-    def resolveWordGroup(self,sentence, context, phraseMap, tagsetIndex):
+    def resolveWordGroup(self,sentence, context, phraseMap, tagsetIndex, phrase):
         for index, pair in enumerate(sentence.pairs):
             if issubclass(type(pair), sm.WordGroup):
-                self.resolveWordGroup(pair, context, phraseMap,tagsetIndex)
+                phrase2 = Phrase() 
+                self.resolveWordGroup(pair, context, phraseMap,tagsetIndex,phrase2)
             else:
                 if len(yongeonTags & set(pair.tags))>0 and len(cheeonTags & set(pair.tags))==0:
 
@@ -32,7 +54,9 @@ class YongeonResolver(resolver.Resolver):
                         pmap = {}
                         phraseMap[pair.head] = pmap
 
-                    phrase = []
+                    # phrase.add(sentence.words[index], pair)
+
+                    pairs = []
                     texts = []
                     tags = []
                     # phrase.append(word)
@@ -41,25 +65,31 @@ class YongeonResolver(resolver.Resolver):
                     if index > 1:
                         prev = sentence.words[index-1]
                         if type(prev) is sm.Word:
-                            phrase.append(prev)
+                            pairs.append(prev)
                             texts.append(prev.text)
                             if prev.bestpair:
                                 tags.append('+'.join(prev.bestpair.tags))
+                                # phrase.add(prev, prev.bestpair)
+                            # else:
+                            #     phrase.add(prev, prev.particles[0])
 
                             if index > 2:
                                 prev = sentence.words[index-2]
                                 if type(prev) is sm.Word:
-                                    phrase.append(prev)
+                                    pairs.append(prev)
                                     texts.append(prev.text)
                                     if prev.bestpair:
                                         tags.append('+'.join(prev.bestpair.tags))
+                                        # phrase.add(prev, prev.bestpair)
+                                    # else:
+                                    #     phrase.add(prev, prev.particles[0])
                                 
 
                     text = ' '.join(reversed(texts))
                     tagtext = ':'.join(reversed(tags))
 
                     if pmap.get(text) is None:
-                        wl = list(reversed(phrase))
+                        wl = list(reversed(pairs))
                         pmap[text] = wl
                     
                     headset = tagsetIndex.get(tagtext)
@@ -68,6 +98,7 @@ class YongeonResolver(resolver.Resolver):
                         headset = set()
                         tagsetIndex[tagtext] = headset
                     headset.add(pair.head)
+        # phrase.reverse()
 
     def clssifyYongEon(self):
         for head, pmap in self.phraseMap.items():
@@ -116,7 +147,6 @@ class YongeonResolver(resolver.Resolver):
         starttime = time.time()
         with open(path, 'w', encoding='utf-8') as csvfile :
             writer = csv.writer(csvfile)
-            self.phraseMap
 
             for head, pmap in self.phraseMap.items():
                 for text, m in pmap.items():

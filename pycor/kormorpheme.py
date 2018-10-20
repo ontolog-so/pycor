@@ -1,5 +1,5 @@
 import sys
-import pycor.langmodel as lm
+import pycor.morpheme as lm
 import pycor.speechmodel as sm
 import pycor.korutils as korutils
 

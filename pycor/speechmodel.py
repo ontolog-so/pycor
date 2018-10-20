@@ -22,6 +22,9 @@ class Word:
         self.prevnexts = []
         self.bestpair = None
     
+    def __repr__(self) :
+        return "{" + self.text + "}"
+    
     def type(self):
         return "W"
     
@@ -111,7 +114,12 @@ class Quote(WordGroup):
         super().__init__()
         self.grptype = "Q"
         self.quotetype = None
+        self.first = None
+        self.last = None
 
+    def __repr__(self) :
+        return "Q<" + str(self.words) + ">"
+    
 class Sentence(WordGroup):
     def __init__(self):
         super().__init__()
@@ -170,10 +178,6 @@ class Head:
 
 _VOID_Head = Head(u'').addpos('VOID')
 
-class Keyword(Head):
-    def __init__(self, text):
-        super().__init__(text)
-    
 
 ########################
 #  Tail
@@ -249,7 +253,23 @@ class ContextWrapper:
 
     def load(self, modelDir):
         self.parent.load(modelDir)
+
+class DocumentContext(ContextWrapper):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.headCountMap = {}
+
+    def countHead(self, head):
+        count = self.headCountMap.get(head)
+        if count is None:
+            count = 1
+        else:
+            count += 1
         
+        self.headCountMap[head] = count
+        
+        return count
+
 ########################
 #  단어 정보 객체 
 ########################

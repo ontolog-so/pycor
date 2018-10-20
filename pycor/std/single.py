@@ -1,7 +1,7 @@
 import sys
-import pycor.langmodel as lm
+import pycor.morpheme as lm
 import pycor.korutils
-import pycor.korlangmodel as klm
+import pycor.kormorpheme as klm
 
 ##################################################
 # SingleWords 세팅 

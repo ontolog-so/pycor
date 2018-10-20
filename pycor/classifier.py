@@ -1,5 +1,5 @@
 import os
-from pycor import langmodel as lm
+from pycor import morpheme as lm
 import pycor.speechmodel as sm
 
 
@@ -24,7 +24,7 @@ def def_classify(head, force=True):
             for tail in head.tails:
                 tags.update(tail.tags)
                 
-            yscore = len(tags & Y_TAGS0) * 4 + len(tags & Y_TAGS1) * 3 + len(tags & Y_TAGS2) * 1
+            yscore = len(tags & Y_TAGS0) * 4 + len(tags & Y_TAGS1) * 3 + len(tags & Y_TAGS2) * 1.5
             cscore = len(tags & C_TAGS0) * 4 + len(tags & C_TAGS1) * 3 + len(tags & C_TAGS2) * 2
             
             head.removepos('AMBI')

@@ -1,7 +1,7 @@
 import re
 from threading import Lock
 from pycor import korutils, parser
-from pycor import langmodel as lm
+from pycor import morpheme as lm
 from pycor import speechmodel as sm
 
 

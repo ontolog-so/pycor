@@ -1,18 +1,26 @@
 import pycor.speechmodel as sm
-from pycor import langmodel, korutils 
+from pycor import morpheme, korutils 
 
 
 def printSentences(sentences):
     for sentence in sentences:
-        _printWordGroup(sentence)
-        print()
+        print(_toTextWordGroup(sentence))
 
-def _printWordGroup(wordgroup):
+
+def _toTextWordGroup(wordgroup):
+    aline =[]
     for pair in wordgroup.pairs:
         if issubclass(type(pair), sm.WordGroup):
-            _printWordGroup(pair)
-        else :
-            print(pair.text ,end=" ")
+            if type(pair) is sm.Quote:
+                aline.append(pair.first)
+                aline.append( _toTextWordGroup(pair) )
+                aline.append(pair.last)
+            else:
+                aline.append( _toTextWordGroup(pair) )
+        else:
+            aline.append( pair.text )
+    return ' '.join(aline)
+
 
 def getKeywords(wordgroup):
     kwdset = set()

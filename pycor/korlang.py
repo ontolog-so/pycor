@@ -192,15 +192,6 @@ def printSentences(sentences):
 def totexts(sentences):
     lines = []
     for sentence in sentences:
-        line = _wordgrouptotexts(sentence)
+        line = keywordutils._toTextWordGroup(sentence)
         lines.append(line)
     return lines
-
-def _wordgrouptotexts(wordgroup):
-    aline =[]
-    for pair in wordgroup.pairs:
-        if issubclass(type(pair), sm.WordGroup):
-            aline.append( _wordgrouptotexts(pair) )
-        else:
-            aline.append( pair.text )
-    return ' '.join(aline)

@@ -1,7 +1,7 @@
 import re
 import os
 import pycor.speechmodel as sm
-from pycor import langmodel, korutils, scoring, classifier, resolver
+from pycor import morpheme, syntagm, korutils, scoring, classifier, resolver
 
 class Quote:
     def __init__(self,start,end):
@@ -157,6 +157,116 @@ class WordTokens :
             return self.tokens[startIdx]
     
 ##################################################
+#  문장 단위 어절 커서  
+##################################################
+class SyntagmTokens :
+    def set(self,sentence):
+        self.sentence = sentence
+        self.curidx = None
+        self.length = len(sentence.words)
+        idx = 0
+
+    def setPos(self, index):
+        self.curidx = index
+        return self
+    
+    def fromEnd(self):
+        return length - self.curidx
+    
+    def current(self, toIdx=None):
+        if toIdx is None:
+            return self.sentence.words[self.curidx]
+        else :
+            if toIdx > self.curidx:
+                return self.sentence.words[self.curidx:toIdx]
+            else:
+                return self.sentence.words[toIdx:self.curidx+1]
+
+    def next(self, size=1):
+        if self.curidx is None:
+            self.curidx = -1
+        
+        if self.curidx < self.length-1:
+            self.curidx += 1
+            if size > 1:
+                nextpos = self.curidx + size 
+                tokens = self.sentence.words[self.curidx:nextpos]
+                self.curidx = nextpos-1
+                return tokens
+            else:
+                return self.sentence.words[self.curidx]
+        else:
+            return None
+        
+    def peekNext(self):
+        idx = self.curidx
+        if idx is None:
+            idx = -1
+        
+        if idx < self.length-1:
+            idx += 1
+            return self.sentence.words[idx]
+        else:
+            return None
+        
+        pre = wordTokens.peekPrev()
+
+    def peekNexts(self,count):
+        idx = self.curidx
+        if idx is None:
+            idx = -1
+        
+        if idx < self.length-1:
+            idx += 1
+            end = idx + count
+            return self.sentence.words[idx:end]
+        else:
+            return None
+    
+    def prev(self, size=1):
+        if self.curidx is None:
+            self.curidx = self.length
+        
+        if self.curidx > 0:
+            if size > 1:
+                prevpos = self.curidx - size
+                tokens = self.sentence.words[prevpos:self.curidx]
+                self.curidx = prevpos
+                return tokens
+            else:
+                self.curidx -= 1
+                return self.sentence.words[self.curidx]
+        else :
+            return None
+    
+    def peekPrev(self):
+        idx = self.curidx
+        if idx is None:
+            idx = self.length
+        
+        if idx > 0:
+            idx -= 1
+            prev = self.sentence.words[idx]
+            return prev
+        else :
+            return None
+    
+    def peekPrevs(self, count):
+        idx = self.curidx
+        if idx is None:
+            idx = self.length
+
+        if idx > 0:
+            start = idx - count
+            if start < 0 :
+                start = 0
+            idx -= 1
+            prev = self.sentence.words[start:idx]
+            return prev
+        else :
+            return None
+    
+##################################################
 #  Class : WordParser 어절 단위 파서 
 ##################################################
 class WordParser:
@@ -164,18 +274,18 @@ class WordParser:
     non_kor_pattern = re.compile("([^가-힣]+)")
     tail_token_pattern = re.compile("([^가-힣ㄱ-ㅎ]+|[가-힣ㄱ-ㅎ])")
     
-    def __init__(self, auxmap = langmodel.auxmap, singlemap=langmodel.singlemap):
+    def __init__(self, auxmap = morpheme.auxmap, singlemap=morpheme.singlemap):
         self.auxmap = auxmap
         self.singlemap = singlemap
         
     def getAuxs(self, token):
-        return langmodel.getAuxs(token)
+        return morpheme.getAuxs(token)
         
     def getStems(self, token):
-        return langmodel.getStems(token)
+        return morpheme.getStems(token)
         
     def getSuffixs(self, token):
-        return langmodel.getSuffixs(token)
+        return morpheme.getSuffixs(token)
     
     def getword(self, text, prev, nxt,  wordmap):
         word = wordmap.getword(text)
@@ -299,21 +409,18 @@ class WordParser:
 #################################################
 class SentenceParser:
     def __init__(self, wordparser=WordParser(), quoteclues=_quoteclues, equivalentclues=_equivalentclues , 
-        scorefunc=scoring.default_scorepair, classifyfunc=classifier.def_classify, 
-        resolvesentencefunc=resolver.def_resolvesentence, wordMap=None):
-        self._initimpl(wordparser, quoteclues, equivalentclues, scorefunc, classifyfunc, 
-            resolvesentencefunc , wordMap)
+        scorefunc=scoring.default_scorepair, classifyfunc=classifier.def_classify, wordMap=None):
+        self._initimpl(wordparser, quoteclues, equivalentclues, scorefunc, classifyfunc, wordMap)
         self.verbose = False
         self.resolvers = []
         
     def _initimpl(self, wordparser, quoteclues, equivalentclues, scorefunc, 
-            classifyfunc, resolvesentencefunc, wordMap=None):
+            classifyfunc, wordMap=None):
         if wordMap is None:
             wordMap = sm.WordMap()
         self.wordmap = wordMap
         self.scorefunction = scorefunc
         self.classifyfunction = classifyfunc
-        self.resolvesentencefunc = resolvesentencefunc
         self.wordparser = wordparser
         self.quoteclues = quoteclues
         self.equivalentclues = equivalentclues
@@ -421,7 +528,10 @@ class SentenceParser:
 
                 if end > index:
                     arr = self.readrow(text[index+1:end],isquote=True)
-                    
+                    if len(arr) > 0:
+                        arr[0].first = ch
+                        arr[0].last = self.quoteclues[ch].end
+
                     if ch in self.equivalentclues:
                         if len(arr) > 1:
                             words_array.extend(arr)
@@ -493,8 +603,8 @@ class SentenceParser:
                     nxt = words_array[windex+1] if windex < wlength-1 else None
                     
                     sentence.addword( self._getword(word, prev, nxt) )
-            elif type(word) is sm.Sentence:
-                #print("Sentence", word)
+            elif issubclass(type(word), sm.WordGroup):
+                #print("WordGroup", word)
                 sentence.addword(word)
             elif word : 
                 #print("Other", word)
@@ -511,28 +621,56 @@ class SentenceParser:
     def resolveDocument(self, sentence_array, context=None):
         if context is None:
             context = self.wordmap
-        for sentence in sentence_array:
-            self.scoreWordGroup(sentence)
-            self.resolveSentence(sentence, context)
 
-        self._doresolver(sentence_array, context)
+        documentContext = sm.DocumentContext(context)
+        syntagmTokens = SyntagmTokens()
+
+        for sentence in sentence_array:
+            self.scoreWordGroup(sentence, documentContext)
+            syntagmTokens.set(sentence)
+            self.resolveSentence(syntagmTokens, documentContext)
+
+        self._doresolver(sentence_array, documentContext)
 
     def _doresolver(self, sentence_array, context):
         for resolver in self.resolvers:
             resolver.resolveDocument(sentence_array, context)
 
-    def resolveSentence(self, sentence, context):
-        self.resolvesentencefunc(sentence, context)
+    def resolveSentence(self, syntagmTokens, documentContext):
+        word = syntagmTokens.prev()
+        if word :
+            print("(-1)", syntagmTokens.curidx, word.text)
 
-    def scoreWordGroup(self, wordgroup) :
+            words = syntagmTokens.prev(2)
+            print("(-2)", syntagmTokens.curidx, words)
+
+            words = syntagmTokens.prev(3)
+            print("(-3)", syntagmTokens.curidx, words)
+
+            syntagmTokens.setPos(-1)
+
+            word = syntagmTokens.next()
+            print("(+1)", syntagmTokens.curidx, word.text)
+            
+            words = syntagmTokens.next(2)
+            print("(+2)", syntagmTokens.curidx, words)
+
+            words = syntagmTokens.next(3)
+            print("(+3)", syntagmTokens.curidx, words)
+
+
+    def scoreWordGroup(self, wordgroup, documentContext) :
         for index, word in enumerate(wordgroup.words):
             if issubclass(type(word), sm.WordGroup):
-                self.scoreWordGroup(word)
+                wordgroup.addpair( self.scoreWordGroup(word, documentContext) )
             else :
                 prevWords = wordgroup.words[:index]
                 nextWords = wordgroup.words[index+1:]
                 self.classifyHeads(word)
-                self.scoreword(word, prevWords, nextWords, force=True)
+                pair = self.scoreword(word, prevWords, nextWords, force=True)
+                wordgroup.addpair(pair)
+                documentContext.countHead(pair.head)
+        return wordgroup
 
     def classifyHeads(self,word, force=True):
         for pair in  word.particles:
@@ -540,7 +678,7 @@ class SentenceParser:
 
     def scoreword(self, word, prevWords=None, nextWords=None, force=False) :
         if word.bestpair and not(force):
-            return
+            return word.bestpair
 
         if len(word.particles) == 0:
             raise Exception("No Pair", word.text)
@@ -579,3 +717,5 @@ class SentenceParser:
                 maxPart.tail.addtags(maxPart.tags)
 
             word.bestpair = maxPart
+
+            return word.bestpair

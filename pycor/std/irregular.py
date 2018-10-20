@@ -1,7 +1,7 @@
 import sys
 import pycor.korutils
-import pycor.langmodel as lm
-import pycor.korlangmodel as klm
+import pycor.morpheme as lm
+import pycor.kormorpheme as klm
 import pycor.std.aux as aux
 
 
