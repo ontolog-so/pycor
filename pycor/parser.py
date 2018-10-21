@@ -157,116 +157,6 @@ class WordTokens :
             return self.tokens[startIdx]
     
 ##################################################
-#  문장 단위 어절 커서  
-##################################################
-class SyntagmTokens :
-    def set(self,sentence):
-        self.sentence = sentence
-        self.curidx = None
-        self.length = len(sentence.words)
-        idx = 0
-
-    def setPos(self, index):
-        self.curidx = index
-        return self
-    
-    def fromEnd(self):
-        return length - self.curidx
-    
-    def current(self, toIdx=None):
-        if toIdx is None:
-            return self.sentence.words[self.curidx]
-        else :
-            if toIdx > self.curidx:
-                return self.sentence.words[self.curidx:toIdx]
-            else:
-                return self.sentence.words[toIdx:self.curidx+1]
-
-    def next(self, size=1):
-        if self.curidx is None:
-            self.curidx = -1
-        
-        if self.curidx < self.length-1:
-            self.curidx += 1
-            if size > 1:
-                nextpos = self.curidx + size 
-                tokens = self.sentence.words[self.curidx:nextpos]
-                self.curidx = nextpos-1
-                return tokens
-            else:
-                return self.sentence.words[self.curidx]
-        else:
-            return None
-        
-    def peekNext(self):
-        idx = self.curidx
-        if idx is None:
-            idx = -1
-        
-        if idx < self.length-1:
-            idx += 1
-            return self.sentence.words[idx]
-        else:
-            return None
-        
-        pre = wordTokens.peekPrev()
-
-    def peekNexts(self,count):
-        idx = self.curidx
-        if idx is None:
-            idx = -1
-        
-        if idx < self.length-1:
-            idx += 1
-            end = idx + count
-            return self.sentence.words[idx:end]
-        else:
-            return None
-    
-    def prev(self, size=1):
-        if self.curidx is None:
-            self.curidx = self.length
-        
-        if self.curidx > 0:
-            if size > 1:
-                prevpos = self.curidx - size
-                tokens = self.sentence.words[prevpos:self.curidx]
-                self.curidx = prevpos
-                return tokens
-            else:
-                self.curidx -= 1
-                return self.sentence.words[self.curidx]
-        else :
-            return None
-    
-    def peekPrev(self):
-        idx = self.curidx
-        if idx is None:
-            idx = self.length
-        
-        if idx > 0:
-            idx -= 1
-            prev = self.sentence.words[idx]
-            return prev
-        else :
-            return None
-    
-    def peekPrevs(self, count):
-        idx = self.curidx
-        if idx is None:
-            idx = self.length
-
-        if idx > 0:
-            start = idx - count
-            if start < 0 :
-                start = 0
-            idx -= 1
-            prev = self.sentence.words[start:idx]
-            return prev
-        else :
-            return None
-    
-##################################################
 #  Class : WordParser 어절 단위 파서 
 ##################################################
 class WordParser:
@@ -484,7 +374,7 @@ class SentenceParser:
         self.wordmap.readheads(dic_path)
 
     ########################
-    #  Read all Document  
+    #  Read all Document  : + resolveDocument
     ########################
     def readtext(self, text, context=None):
         """
@@ -501,7 +391,7 @@ class SentenceParser:
         return sentence_array
 
     ########################
-    #  라인별 읽기 
+    #  라인별 읽기  : resolveDocument 안함 
     ########################
     def readrow(self,text, isquote=False):
         sentence_array = []
@@ -558,7 +448,8 @@ class SentenceParser:
                     words_array.append(ch)
                     word = ''
                     sent = self._buildsentence(words_array)
-                    sentence_array.append(sent)
+                    if sent.length()>0:
+                        sentence_array.append(sent)
                     words_array.clear()
                 #elif ch.isspace():
                 elif ch in [' ','　',' ',' ',',','\n','\r']:
@@ -579,14 +470,14 @@ class SentenceParser:
 
         if len(words_array) > 0:
             sent = self._buildsentence(words_array, isquote)
-            sentence_array.append(sent)
-
-        return sentence_array
+            if(sent.length()>0):
+                sentence_array.append(sent)
+            
 
     
     # words_array를 기반으로 Word 객체 생성하고  Sentence 생성  
     def _buildsentence(self, words_array, isquote=False):
-        sentence = sm.Sentence()
+        sentence = None
         if isquote:
             sentence = sm.Quote()
         else:
@@ -623,41 +514,25 @@ class SentenceParser:
             context = self.wordmap
 
         documentContext = sm.DocumentContext(context)
-        syntagmTokens = SyntagmTokens()
+        syntagmCursor = syntagm.SyntagmCursor()
 
         for sentence in sentence_array:
             self.scoreWordGroup(sentence, documentContext)
-            syntagmTokens.set(sentence)
-            self.resolveSentence(syntagmTokens, documentContext)
-
+            syntagmCursor.set(sentence)
+            self.resolveSentence(syntagmCursor, documentContext)
+            # Scoring 한번 더 
+            sentence.clearpairs()
+            self.scoreWordGroup(sentence, documentContext)
+        
         self._doresolver(sentence_array, documentContext)
 
     def _doresolver(self, sentence_array, context):
         for resolver in self.resolvers:
             resolver.resolveDocument(sentence_array, context)
 
-    def resolveSentence(self, syntagmTokens, documentContext):
-        word = syntagmTokens.prev()
-        if word :
-            print("(-1)", syntagmTokens.curidx, word.text)
-
-            words = syntagmTokens.prev(2)
-            print("(-2)", syntagmTokens.curidx, words)
-
-            words = syntagmTokens.prev(3)
-            print("(-3)", syntagmTokens.curidx, words)
-
-            syntagmTokens.setPos(-1)
-
-            word = syntagmTokens.next()
-            print("(+1)", syntagmTokens.curidx, word.text)
-            
-            words = syntagmTokens.next(2)
-            print("(+2)", syntagmTokens.curidx, words)
-
-            words = syntagmTokens.next(3)
-            print("(+3)", syntagmTokens.curidx, words)
-
+    def resolveSentence(self, syntagmCursor, documentContext):
+        syntagmCursor.toEnd()
+        syntagm.processSyntagms(syntagmCursor,documentContext)
 
     def scoreWordGroup(self, wordgroup, documentContext) :
         for index, word in enumerate(wordgroup.words):
@@ -666,15 +541,15 @@ class SentenceParser:
             else :
                 prevWords = wordgroup.words[:index]
                 nextWords = wordgroup.words[index+1:]
-                self.classifyHeads(word)
+                self.classifyHeads(word,prevWords,nextWords)
                 pair = self.scoreword(word, prevWords, nextWords, force=True)
                 wordgroup.addpair(pair)
                 documentContext.countHead(pair.head)
         return wordgroup
 
-    def classifyHeads(self,word, force=True):
+    def classifyHeads(self,word,prevWords,nextWords, force=True):
         for pair in  word.particles:
-            self.classifyfunction(pair.head, force)
+            self.classifyfunction(pair.head,prevWords,nextWords, force)
 
     def scoreword(self, word, prevWords=None, nextWords=None, force=False) :
         if word.bestpair and not(force):

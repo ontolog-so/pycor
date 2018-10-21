@@ -91,6 +91,9 @@ class WordGroup:
     def type(self):
         return "WG"
     
+    def length(self):
+        return len(self.words)
+
     def text(self):
         text = ''
         for w in self.words:
@@ -106,6 +109,19 @@ class WordGroup:
 
     def addpair(self, pair):
         self.pairs.append(pair)
+    
+    def clearpairs(self):
+        for pair in self.pairs:
+            if issubclass(type(pair),WordGroup):
+                pair.clearpairs()
+        self.pairs.clear()
+
+    def getWord(self, index):
+        return self.words[index]
+
+    def getPair(self, index):
+        return self.pairs[index]
+
 
 QUOTE_TYPE_EQUIV = 'EQUIV'
 
@@ -118,7 +134,7 @@ class Quote(WordGroup):
         self.last = None
 
     def __repr__(self) :
-        return "Q<" + str(self.words) + ">"
+        return "Q" + str(self.quotetype) + str(self.first) + str(self.words) + str(self.last)
     
 class Sentence(WordGroup):
     def __init__(self):

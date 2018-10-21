@@ -22,7 +22,7 @@ def default_scorepair(pair, word, context, prevWords, nextWords):
     if pair.ambi:
         # hs += pair.head.score * 0.7
         if pair.head.score<1:
-            penalty += 1 -pair.head.score
+            penalty += 1.5 -pair.head.score
     # else :
     #     hs += pair.head.occurrence() * 0.1
 

@@ -4,13 +4,14 @@ import pycor.speechmodel as sm
 import pycor.korutils as korutils
 
 
-def buildJongsungAux(jongsung):
+def buildJongsungAux(jongsung, escape=None):
     if jongsung in korutils.phoneme_final:
         tokens = []
         for cho in korutils.phoneme_first:
             for jung in korutils.phoneme_vow:
                 ch = korutils.compose(cho, jung, jongsung)
-                tokens.append(ch)
+                if escape and not(ch in escape):
+                    tokens.append(ch)
 
         return JongsungAux(tokens, jongsungs=jongsung) 
 

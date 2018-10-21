@@ -355,6 +355,9 @@ class Worm:
         lastPair = headtails[len(headtails)-1] if len(headtails)> 0 else prevPair
         preWorms = self.getPrecedent(wordTokens, lastPair)
         
+        # if '습' in self.tokens:
+        #     print(".... 습", wordTokens.peekPrev())
+        #     print("--preWorms -", preWorms)
         if preWorms :
             curidx = wordTokens.curidx;
             for preWorm in preWorms:
@@ -432,10 +435,6 @@ class _MultiSyllablesWorm(Worm) :
         self.first.addConst(constraints)
         return self
     
-    def after(self, worms):
-        self.first.after(worms)
-        return self
-    
     def addPre(self, worm):
         self.first.addPre(worm)
         return self
@@ -461,10 +460,9 @@ class _MultiSyllablesWorm(Worm) :
             return False
         
         text = ''.join(wordTokens.current(fromIdx))
-        #print(self.syllables, text)
+        
         if text != self.syllables:
             return False
-
         wordTokens.setPos(fromIdx)
 
         return self.first._checkConstraints(wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord,headObj, tags)
@@ -535,14 +533,6 @@ class MultiSyllablesAux(_MultiSyllablesWorm) :
         last.after(first)
         return first , last
     
-    def getUpWorms(self,wordTokens, followingWorm, wordObj, prevPair, prevWord, nextWord):
-        token = None
-        if prevPair and prevPair.head :
-            token = prevPair.head[len(prevPair.head) -1]
-        else :
-            token = wordTokens.peekPrev()
-        return getStems(token)
-
     
 ############################################
 # Stem 어간 

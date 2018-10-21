@@ -6,7 +6,8 @@ from pycor.std import *
 __all__ = ["getmodel", "setmodel", "loadmodel", "loaddic", "savemodel","addresolver", "removeresolver",
             "train", "trainfiles", "buildvocab", "readfile", "readtext", "resolveword", "setscorefunction",
             "trim","trimfile","__trim", "keywords","keywordsFromText", "setwordlimit", 
-            "printSentences", "abstract", "abstractKeywords","totexts", "registerKeyword"]
+            "printSentences", "abstract", "abstractKeywords","totexts", "registerKeyword",
+            "debugword"]
 
 ESC_TAGS = set(['MM','DN','NNB', 'PT','QS','QE','BS','BE' ,'QM','VOID','EC','CL','SC'])
 
@@ -195,3 +196,7 @@ def totexts(sentences):
         line = keywordutils._toTextWordGroup(sentence)
         lines.append(line)
     return lines
+
+def debugword(word):
+    for pair in word.particles:
+        print (pair)
