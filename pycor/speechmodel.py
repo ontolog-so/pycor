@@ -150,12 +150,12 @@ class Head:
         self.text = text
         self.score = 0.0
         self.occ = 0
-        self.frequency = 0
+        # self.frequency = 0
         self.tails = []
         self.proto = None
-        # self.equivalent = None
         self.pos = set()
-        
+        self.pairs = {}
+
     def type(self):
         return "H"
     
@@ -165,9 +165,23 @@ class Head:
     def appendtail(self, tail):
         if not(tail in self.tails):
             self.tails.append(tail)
+
+    def addpair(self, tailtext, score, pos, tags):
+        pair = self.pairs.get(tailtext)
+        if pair is None:
+            pair = [score, pos, set(tags),1]
+            self.pairs[tailtext] = pair
+        else:
+            pair[0] += score
+            pair[1].update(pos)
+            pair[2].update(tags)
+            pair[3] += 1
+        return pair
+
+
     
-    def freq(self):
-        self.frequency += 1
+    # def freq(self):
+    #     self.frequency += 1
 
     def occurrence(self):
         return self.occ + len(self.tails)
@@ -390,7 +404,89 @@ class WordMap :
         print("Save ", path,  "  소요시간:" , round(time.time() - starttime, 3))
     
     #########################
-    ## Head/tail 출력 내부 함수 
+    ## Head 출력 
+    #########################
+    def writeheads(self, path="model/heads.csv", sorter=sortParticle, reversed=False):
+        starttime = time.time()
+        with open(path, 'w', encoding='utf-8') as csvfile :
+            writer = csv.writer(csvfile)
+            list = self.heads.values()
+
+            if sorter:
+                list = sorted(list, key=lambda particle: sorter(particle), reverse=reversed)
+            
+            for head in list:
+                if head.score:
+                    if len(head.pairs) == 0:
+                        writer.writerow([head.text, '', head.score, '+'.join(head.pos), '', head.occurrence()])
+                    else:
+                        for tail, pair in head.pairs.items():
+                            writer.writerow([head.text, tail, pair[0], '+'.join(pair[1]), '+'.join(pair[2]),pair[3] ]) 
+
+            csvfile.close()
+        print("Save ", path,  "  소요시간:" , round(time.time() - starttime, 3))
+        
+    def readheads(self, path="model/heads.csv"):
+        starttime = time.time()
+        with open(path, 'r', encoding='utf-8') as csvfile :
+            reader = csv.reader(csvfile)
+            for row in reader:
+                text = row[0] # head.text
+                tailtext = row[1] # tailtext
+                score = float(row[2]) # score
+                pos = row[3].split("+") # pos
+                tags = row[4].split("+") # tags
+                count = int(row[5]) # count
+
+                head = self.heads.get(text)
+                if head is None:
+                    head = Head(text)
+                    self.heads[text] = head
+                pair = head.addpair(tailtext,score,pos,tags)
+                pair[3] = count
+            csvfile.close()
+        
+        for head in self.heads.values():
+            if len(head.pairs) > 0:
+                score = 0
+                for pair in head.pairs.values():
+                    score += pair[0]/pair[3]
+                    head.pos.update(pair[1])
+                head.score = score / len(head.pairs)
+
+        print("Load ", path,  "  소요시간:" , round(time.time() - starttime, 3))
+    #########################
+    ## Head 로딩 
+    #########################
+    def loaddic(self, path):
+        starttime = time.time()
+        with open(path, 'r', encoding='utf-8') as csvfile :
+            reader = csv.reader(csvfile)
+            for row in reader:
+                text = row[0]
+                pos = row[1].split('+')
+                score = 1
+                occurrence = 10
+
+                length = len(row)
+
+                if length>2:
+                    score = float(row[2])
+                    occurrence = int(score * 10)
+                    if length > 3:
+                        occurrence = int(row[3])
+
+                head = Head(text)
+                head.addpos(pos)
+                head.score = score
+                head.occ = occurrence
+                self.heads[text] = head
+            csvfile.close()
+        print("Load ", path,  "  소요시간:" , round(time.time() - starttime, 3))
+        
+
+    #########################
+    ## Tail / Collocation 출력 내부 함수 
     #########################
     def _write_particles(self, path, parts, bhead, sorter=None, reversed=False):
         starttime = time.time()
@@ -411,54 +507,13 @@ class WordMap :
             csvfile.close()
         print("Save ", path,  "  소요시간:" , round(time.time() - starttime, 3))
 
-    
     #########################
-    ## Head 출력 
+    ## Collocation 출력  
     #########################
-    def writeheads(self, path="model/heads.csv", sorter=sortParticle, reversed=False):
-        self._write_particles(path, self.heads, True, sorter, reversed)
-        
     def writecollocations(self, path="model/collocations.csv", sorter=sortParticle, reversed=False):
         self._write_particles(path, self.collocations, True, sorter, reversed)
         
-    #########################
-    ## Head 로딩 
-    #########################
-    def readheads(self, path="model/heads.csv"):
-        starttime = time.time()
-        with open(path, 'r', encoding='utf-8') as csvfile :
-            reader = csv.reader(csvfile)
-            for row in reader:
-                text = row[0]
-                pos = row[1].split('+')
-                score = 1
-                occurrence = 10
-                frequency = 1
-                proto = None
-
-                length = len(row)
-
-                if length>2:
-                    score = float(row[2])
-                    occurrence = int(score * 10)
-                    if length > 3:
-                        occurrence = int(row[3])
-                        if length > 4:
-                            frequency = int(row[4])
-                            if length > 5:
-                                proto = str(row[5])
-
-                head = Head(text)
-                head.addpos(pos)
-                head.score = score
-                head.occ = occurrence
-                head.frequency = frequency
-                if proto:
-                    head.proto = proto
-                self.heads[text] = head
-            csvfile.close()
-        print("Load ", path,  "  소요시간:" , round(time.time() - starttime, 3))
-        
+    
     #########################
     ## Tail 출력 
     #########################

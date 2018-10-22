@@ -253,7 +253,7 @@ class WordParser:
         if head is None:
             head = self.buildhead(wordTokens, h, wordmap)
             
-        head.freq()
+        # head.freq()
         tail = sm._VOID_Tail
         
         if pair.tail:
@@ -371,7 +371,7 @@ class SentenceParser:
 
     def loaddic(self, dic_path):
         print("Loading Dictionary from",dic_path)
-        self.wordmap.readheads(dic_path)
+        self.wordmap.loaddic(dic_path)
 
     ########################
     #  Read all Document  : + resolveDocument
@@ -549,7 +549,7 @@ class SentenceParser:
 
     def classifyHeads(self,word,prevWords,nextWords, force=True):
         for pair in  word.particles:
-            self.classifyfunction(pair.head,prevWords,nextWords, force)
+            self.classifyfunction(pair,prevWords,nextWords, force)
 
     def scoreword(self, word, prevWords=None, nextWords=None, force=False) :
         if word.bestpair and not(force):
@@ -590,6 +590,7 @@ class SentenceParser:
                 tscore = maxPart.tail.score + score
                 maxPart.tail.score = tscore /2
                 maxPart.tail.addtags(maxPart.tags)
+                maxPart.head.addpair(maxPart.tail.text, score, maxPart.pos, maxPart.tags)
 
             word.bestpair = maxPart
 

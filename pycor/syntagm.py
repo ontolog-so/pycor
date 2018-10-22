@@ -201,7 +201,9 @@ class PTSyntagm(Syntagm) :
 
     def process(self, syntagmCursor, documentContext):
         last = syntagmCursor.prev()
-
+        if last is None:
+            return
+            
         if issubclass(type(last), sm.WordGroup):
             _processSyntagmsSub(last, documentContext)
         else:

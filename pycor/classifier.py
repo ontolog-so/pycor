@@ -14,8 +14,9 @@ C_TAGS2 = set(['JKO','JX-SO'])
 C_POS = set(['NP','NNB'])
 
 
-def def_classify(head, prevWords, nextWords, force=True):
-    if force or len(head.pos) == 0:
+def def_classify(pair, prevWords, nextWords, force=True):
+    head = pair.head
+    if force or len(pair.pos) == 0:
         if len(head.tails) == 0:
             if len(head.pos) == 0:
                 head.addpos('SNG')
@@ -32,9 +33,12 @@ def def_classify(head, prevWords, nextWords, force=True):
             if yscore > cscore:
                 head.removepos('C') 
                 head.addpos('Y')
+                pair.addpos('Y')
             elif cscore > yscore:
                 head.removepos('Y')
                 head.addpos('C')
+                pair.addpos('C')
             elif len(head.pos) == 0:
                 head.addpos('AMBI')
+                pair.addpos('AMBI')
     

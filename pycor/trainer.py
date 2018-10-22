@@ -108,22 +108,22 @@ class Trainer(parser.SentenceParser) :
 
         return snglist, ylist, clist, ambilist
 
-    def analyzeHead(self,head, tags, headMap, headTagsMap):
-        headText = head.text
-        length = len(headText)
+    # def analyzeHead(self,head, tags, headMap, headTagsMap):
+    #     headText = head.text
+    #     length = len(headText)
 
-        if length < 2:
-            return
+    #     if length < 2:
+    #         return
             
-        suffixes = lm.getSuffixes(headText[length-1])
+    #     suffixes = lm.getSuffixes(headText[length-1])
         
-        if suffixes:
-            wordTokens = parser.WordTokens(headText)
-            wordTokens.prev()
-            curindex = wordTokens.curidx
-            for suf in suffixes:
-                wordTokens.setPos(curindex)
-                pairs = suf.procede(wordTokens,None,None,None,None,None,head, tags)
+    #     if suffixes:
+    #         wordTokens = parser.WordTokens(headText)
+    #         wordTokens.prev()
+    #         curindex = wordTokens.curidx
+    #         for suf in suffixes:
+    #             wordTokens.setPos(curindex)
+    #             pairs = suf.procede(wordTokens,None,None,None,None,None,head, tags)
 
     def classify(self,head, tags, snglist, ylist, clist, ambilist):
         if 'Y' in head.pos:
