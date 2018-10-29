@@ -52,7 +52,7 @@ class Pair:
         self.tags = []
         
     def __repr__(self) :
-        return str(self.head) + ":" + str(self.tail) 
+        return str(self.head) + ":" + str(self.tail.text) +":"+str(self.tags)
     
     def ambiguous(self, ambi=True):
         self.ambi = ambi
@@ -150,7 +150,7 @@ class Head:
         self.text = text
         self.score = 0.0
         self.occ = 0
-        # self.frequency = 0
+        self.frequency = 0
         self.tails = []
         self.proto = None
         self.pos = set()
@@ -180,8 +180,8 @@ class Head:
 
 
     
-    # def freq(self):
-    #     self.frequency += 1
+    def freq(self):
+        self.frequency += 1
 
     def occurrence(self):
         return self.occ + len(self.tails)
@@ -250,9 +250,6 @@ class CollocationHead(Head):
         super().__init__(' '.join(texts))
         self.texts = texts
         self.score = 1
-    
-    def tp():
-        return "HEAD"
     
 
 class ContextWrapper:
@@ -367,13 +364,14 @@ class WordMap :
         return word
     
     def save(self, modelDir):
-        self.writeheads(path=modelDir + "/heads.csv")
+        self.writeWordModel(path=modelDir + "/model.csv")
         self.writetails(path=modelDir + "/tails.csv")
         self.writecollocations(path=modelDir + "/collocations.csv")
+        self.savedic(path=modelDir + "/dictionary.csv")
         self.clearheads()
 
     def load(self, modelDir):
-        self.readheads(path=modelDir + "/heads.csv")
+        self.readWordModel(path=modelDir + "/model.csv")
         self.readtails(path=modelDir + "/tails.csv")
         
     # words 비우기 
@@ -404,9 +402,9 @@ class WordMap :
         print("Save ", path,  "  소요시간:" , round(time.time() - starttime, 3))
     
     #########################
-    ## Head 출력 
+    ## Head + Tail 출력 
     #########################
-    def writeheads(self, path="model/heads.csv", sorter=sortParticle, reversed=False):
+    def writeWordModel(self, path="model/heads.csv", sorter=sortParticle, reversed=False):
         starttime = time.time()
         with open(path, 'w', encoding='utf-8') as csvfile :
             writer = csv.writer(csvfile)
@@ -425,8 +423,12 @@ class WordMap :
 
             csvfile.close()
         print("Save ", path,  "  소요시간:" , round(time.time() - starttime, 3))
-        
-    def readheads(self, path="model/heads.csv"):
+    
+    
+    #########################
+    ## Head + Tail 읽기 
+    #########################
+    def readWordModel(self, path="model/heads.csv"):
         starttime = time.time()
         with open(path, 'r', encoding='utf-8') as csvfile :
             reader = csv.reader(csvfile)
@@ -434,7 +436,7 @@ class WordMap :
                 text = row[0] # head.text
                 tailtext = row[1] # tailtext
                 score = float(row[2]) # score
-                pos = row[3].split("+") # pos
+                pos = set(row[3].split("+")) # pos
                 tags = row[4].split("+") # tags
                 count = int(row[5]) # count
 
@@ -455,8 +457,27 @@ class WordMap :
                 head.score = score / len(head.pairs)
 
         print("Load ", path,  "  소요시간:" , round(time.time() - starttime, 3))
+
     #########################
-    ## Head 로딩 
+    ## Dictionary 출력 
+    #########################
+    def savedic(self, path):
+        starttime = time.time()
+        with open(path, 'w', encoding='utf-8') as csvfile :
+            writer = csv.writer(csvfile)
+            list = self.heads.values()
+
+            list = sorted(list, key=lambda particle: sortParticle(particle), reverse=False)
+            
+            for head in list:
+                if head.score:
+                    writer.writerow([head.text, '', head.score, '+'.join(head.pos), '', head.occurrence()])
+
+            csvfile.close()
+        print("Save Dic", path,  "  소요시간:" , round(time.time() - starttime, 3))
+    
+    #########################
+    ## Dictionary 로딩 
     #########################
     def loaddic(self, path):
         starttime = time.time()
@@ -482,7 +503,7 @@ class WordMap :
                 head.occ = occurrence
                 self.heads[text] = head
             csvfile.close()
-        print("Load ", path,  "  소요시간:" , round(time.time() - starttime, 3))
+        print("Load Dic", path,  "  소요시간:" , round(time.time() - starttime, 3))
         
 
     #########################

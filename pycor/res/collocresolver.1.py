@@ -36,7 +36,7 @@ class CollocationResolver(resolver.Resolver):
                 context.addcollocation(colloc)
     
     def resolveSentence(self,sentence, context):
-        end = len(sentence.pairs) - 1 
+        end = len(sentence.words) - 1 
         index = 0
 
         while index < end:
@@ -53,11 +53,11 @@ class CollocationResolver(resolver.Resolver):
             if second is None:
                 continue
 
-            bigramTxt = ' '.join([second,first])
+            bigramTxt = ' '.join([first,second])
 
             bigram = context.getcollocation(bigramTxt)
             if bigram is None:
-                bigram = sm.CollocationHead([second,first])
+                bigram = sm.CollocationHead([first,second])
                 context.addcollocation(bigram)
             bigram.freq()
 
@@ -71,29 +71,29 @@ class CollocationResolver(resolver.Resolver):
                 if third is None:
                     continue
                 
-                trigramTxt = ' '.join([third,second2,first])
+                trigramTxt = ' '.join([first,second2,third])
 
                 trigram = context.getcollocation(trigramTxt)
                 if trigram is None:
-                    trigram = sm.CollocationHead([third,second2,first])
+                    trigram = sm.CollocationHead([first,second2,third])
                     context.addcollocation(trigram)
                 trigram.freq()
         return sentence
 
 
     def gettext(self, sentence, index, context, islast=False):
-        pair = sentence.pairs[index]
+        word = sentence.words[index]
 
-        if type(pair) is sm.Sentence :
-            self.resolveSentence(pair, context)
-            return str(pair), index +1
-        elif type(pair) is sm.Quote :
-            if(pair.quotetype == sm.QUOTE_TYPE_EQUIV):
-                return str(pair.text) , index+1
+        if type(word) is sm.Sentence :
+            self.resolveSentence(word, context)
+            return None
+        elif type(word) is sm.Quote :
+            if(word.quotetype == sm.QUOTE_TYPE_EQUIV):
+                return word.text().upper(), index+1
             else:
                 return None, index+1
         else:
-            if islast :
-                return pair.head.text, index+1
+            if islast and word.bestpair:
+                return word.bestpair.head.text, index+1
             else:
-                return str(pair.text) , index+1
+                return word.text.upper(), index+1

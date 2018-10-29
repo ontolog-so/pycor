@@ -26,7 +26,6 @@ def default_scorepair(pair, word, context, prevWords, nextWords):
     # else :
     #     hs += pair.head.occurrence() * 0.1
 
-
     ts = 0.0
     
     if pair.tail :
@@ -44,6 +43,8 @@ def default_scorepair(pair, word, context, prevWords, nextWords):
         for t in pair.tags:
             if t.startswith("J"):
                 penalty += 1
+            elif t == "EPT-pr":
+                penalty -= 1
 
     try:
         pair.score = 1/(1 + math.e**(-hs-score + ts + penalty) )
@@ -71,3 +72,46 @@ def default_scorepair(pair, word, context, prevWords, nextWords):
 #     pair.score = hs - (ts*0.09) + score
 
 #     return pair
+
+def default_choosepair(pair, maxPair, context, prevWord, nextWord):
+    if maxPair:
+        if pair.score > maxPair.score:
+            return pair
+        elif pair.score < maxPair.score:
+            return maxPair
+        else:
+            if pair.head.score > maxPair.head.score:
+                return pair
+            elif pair.head.score < maxPair.head.score:
+                return maxPair
+            else:
+                if len(pair.tail.text) > len(maxPair.tail.text):
+                    return pair
+                else:
+                    return maxPair
+
+        # elif pair.score < maxPair.score:
+        #     return maxPair
+        # else :
+            # if pair.head.score > maxPair.head.score:
+            #     return pair
+            # elif pair.head.score < maxPair.head.score:
+            #     return maxPair
+            # else:
+                # TODO
+                # print("TODO::", pair, maxPair)
+                # if nextWord and type(nextWord) is sm.Word:
+                #     if len(nextWord.bestpair.pos & pair.pos) < 1:
+                #         if ("Y" in nextWord.bestpair.pos) and "Y" in pair.pos:
+                #             return maxPair
+                #         else :
+                #             return pair
+                #     else:
+                #         return pair
+                # else :
+                #     if ("Y" in pair.pos):
+                #         return pair
+                #     else:
+                #         return maxPair
+    else :
+        return pair

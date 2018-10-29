@@ -12,13 +12,16 @@ def _toTextWordGroup(wordgroup):
     for pair in wordgroup.pairs:
         if issubclass(type(pair), sm.WordGroup):
             if type(pair) is sm.Quote:
-                aline.append(pair.first)
+                if pair.first:
+                    aline.append(pair.first)
                 aline.append( _toTextWordGroup(pair) )
-                aline.append(pair.last)
+                if pair.last:
+                    aline.append(pair.last)
             else:
                 aline.append( _toTextWordGroup(pair) )
         else:
             aline.append( pair.text )
+    # print(aline)
     return ' '.join(aline)
 
 

@@ -299,17 +299,19 @@ class WordParser:
 #################################################
 class SentenceParser:
     def __init__(self, wordparser=WordParser(), quoteclues=_quoteclues, equivalentclues=_equivalentclues , 
-        scorefunc=scoring.default_scorepair, classifyfunc=classifier.def_classify, wordMap=None):
-        self._initimpl(wordparser, quoteclues, equivalentclues, scorefunc, classifyfunc, wordMap)
+        scorefunc=scoring.default_scorepair, choosepairfunc=scoring.default_choosepair, 
+        classifyfunc=classifier.def_classify, wordMap=None):
+        self._initimpl(wordparser, quoteclues, equivalentclues, scorefunc, choosepairfunc, classifyfunc, wordMap)
         self.verbose = False
         self.resolvers = []
         
-    def _initimpl(self, wordparser, quoteclues, equivalentclues, scorefunc, 
+    def _initimpl(self, wordparser, quoteclues, equivalentclues, scorefunc, choosepairfunc, 
             classifyfunc, wordMap=None):
         if wordMap is None:
             wordMap = sm.WordMap()
         self.wordmap = wordMap
         self.scorefunction = scorefunc
+        self.choosepairfunc = choosepairfunc
         self.classifyfunction = classifyfunc
         self.wordparser = wordparser
         self.quoteclues = quoteclues
@@ -457,6 +459,9 @@ class SentenceParser:
                     word = word.strip()
                     if(len(word) > 0):
                         words_array.append(word)
+                    
+                    if ch == ',':
+                        words_array.append(ch)
                     word = ''
                 elif ch in ['-','_']:
                     word += ch
@@ -518,11 +523,11 @@ class SentenceParser:
 
         for sentence in sentence_array:
             self.scoreWordGroup(sentence, documentContext)
-            syntagmCursor.set(sentence)
-            self.resolveSentence(syntagmCursor, documentContext)
-            # Scoring 한번 더 
-            sentence.clearpairs()
-            self.scoreWordGroup(sentence, documentContext)
+            # syntagmCursor.set(sentence)
+            # self.resolveSentence(syntagmCursor, documentContext)
+            # # Scoring 한번 더 
+            # sentence.clearpairs()
+            # self.scoreWordGroup(sentence, documentContext)
         
         self._doresolver(sentence_array, documentContext)
 
@@ -535,23 +540,31 @@ class SentenceParser:
         syntagm.processSyntagms(syntagmCursor,documentContext)
 
     def scoreWordGroup(self, wordgroup, documentContext) :
+        end = len(wordgroup.words)-1
+        # index = end
+        # while index >= 0:
         for index, word in enumerate(wordgroup.words):
+            # word = wordgroup.words[index]
             if issubclass(type(word), sm.WordGroup):
                 wordgroup.addpair( self.scoreWordGroup(word, documentContext) )
             else :
-                prevWords = wordgroup.words[:index]
-                nextWords = wordgroup.words[index+1:]
-                self.classifyHeads(word,prevWords,nextWords)
-                pair = self.scoreword(word, prevWords, nextWords, force=True)
+                # prevWords = wordgroup.words[:index]
+                # nextWords = wordgroup.words[index+1:]
+                prevWord = wordgroup.words[index-1] if index>0 else None 
+                nextWord = wordgroup.words[index+1] if index<end else None
+                self.classifyHeads(word,prevWord,nextWord)
+                pair = self.scoreword(word, prevWord, nextWord, force=True)
                 wordgroup.addpair(pair)
                 documentContext.countHead(pair.head)
+
+            index -= 1
         return wordgroup
 
-    def classifyHeads(self,word,prevWords,nextWords, force=True):
+    def classifyHeads(self,word,prevWord,nextWord, force=True):
         for pair in  word.particles:
-            self.classifyfunction(pair,prevWords,nextWords, force)
+            self.classifyfunction(pair,prevWord,nextWord, force)
 
-    def scoreword(self, word, prevWords=None, nextWords=None, force=False) :
+    def scoreword(self, word, prevWord=None, nextWord=None, force=False) :
         if word.bestpair and not(force):
             return word.bestpair
 
@@ -560,19 +573,8 @@ class SentenceParser:
         else:
             maxPart = None
             for part in word.particles:
-                self.scorefunction(part, word, self.wordmap, prevWords, nextWords)
-                
-                if maxPart:
-                    if part.score > maxPart.score:
-                        maxPart = part
-                    elif (part.score == maxPart.score) :
-                        if len(part.tags) == len(maxPart.tags) :
-                            if len(part.tail.text) > len(maxPart.tail.text):
-                                maxPart = part
-                        elif (len(part.tags)>len(maxPart.tags)):
-                            maxPart = part
-                else :
-                    maxPart = part
+                self.scorefunction(part, word, self.wordmap, prevWord, nextWord)
+                maxPart = self.choosepairfunc(part, maxPart, self.wordmap, prevWord, nextWord)
                     
             score = maxPart.score
             
@@ -587,8 +589,9 @@ class SentenceParser:
                 maxPart.head.addpos(maxPart.pos)
 
             if maxPart.tail and maxPart.tail != sm._VOID_Tail:
-                tscore = maxPart.tail.score + score
-                maxPart.tail.score = tscore /2
+                # tscore = maxPart.tail.score + score
+                # maxPart.tail.score = tscore /2
+                maxPart.tail.score += 1
                 maxPart.tail.addtags(maxPart.tags)
                 maxPart.head.addpair(maxPart.tail.text, score, maxPart.pos, maxPart.tags)
 
