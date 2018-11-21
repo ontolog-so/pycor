@@ -364,6 +364,8 @@ class WordMap :
         return word
     
     def save(self, modelDir):
+        import os
+        os.makedirs(modelDir, exist_ok=True)
         self.writeWordModel(path=modelDir + "/model.csv")
         self.writetails(path=modelDir + "/tails.csv")
         self.writecollocations(path=modelDir + "/collocations.csv")
@@ -562,3 +564,8 @@ class WordMap :
             csvfile.close()
         print("Load ", path,  "  소요시간:" , round(time.time() - starttime, 3))
 
+    def encodeTails(self):
+        tailMap = {}
+        for index, tail in enumerate(self.tails.keys()):
+            tailMap[tail] = index
+        return tailMap

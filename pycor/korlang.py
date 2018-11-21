@@ -1,5 +1,5 @@
 
-from pycor import trainer, parser, keywordutils, utils, korutils, resolver
+from pycor import trainer, parser, keywordutils, utils, korutils, resolver, dictionary
 import pycor.speechmodel as sm
 from pycor.std import *
 

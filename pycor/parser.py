@@ -519,7 +519,7 @@ class SentenceParser:
             context = self.wordmap
 
         documentContext = sm.DocumentContext(context)
-        syntagmCursor = syntagm.SyntagmCursor()
+        # syntagmCursor = syntagm.SyntagmCursor()
 
         for sentence in sentence_array:
             self.scoreWordGroup(sentence, documentContext)
@@ -571,30 +571,35 @@ class SentenceParser:
         if len(word.particles) == 0:
             raise Exception("No Pair", word.text)
         else:
-            maxPart = None
-            for part in word.particles:
-                self.scorefunction(part, word, self.wordmap, prevWord, nextWord)
-                maxPart = self.choosepairfunc(part, maxPart, self.wordmap, prevWord, nextWord)
-                    
-            score = maxPart.score
+            sum = 0
+            maxPair = None
+            for pair in word.particles:
+                self.scorefunction(pair, word, self.wordmap, prevWord, nextWord)
+                sum += pair.score
+                if maxPair is None or pair.score > maxPair.score:
+                    maxPair = pair
+
+            candidates = []
+            for pair in word.particles:
+                if pair.score >= maxPair.score:
+                    candidates.append(pair)
+
+            maxPair = self.choosepairfunc(candidates, self.wordmap, prevWord, nextWord)
+
+            if sum == 0:
+                sum = 1
+
+            score = maxPair.score / sum
             
-            if maxPart.head:
-                # hscore = maxPart.head.score 
-                # if maxPart.head.score > 0:
-                #     hscore += score / maxPart.head.score
-                # else:
-                #     hscore += score
-                # maxPart.head.score = hscore
-                maxPart.head.score += score
-                maxPart.head.addpos(maxPart.pos)
+            if maxPair.head:
+                maxPair.head.score += score 
+                maxPair.head.addpos(maxPair.pos)
 
-            if maxPart.tail and maxPart.tail != sm._VOID_Tail:
-                # tscore = maxPart.tail.score + score
-                # maxPart.tail.score = tscore /2
-                maxPart.tail.score += 1
-                maxPart.tail.addtags(maxPart.tags)
-                maxPart.head.addpair(maxPart.tail.text, score, maxPart.pos, maxPart.tags)
+            if maxPair.tail and maxPair.tail != sm._VOID_Tail:
+                maxPair.tail.score += score
+                maxPair.tail.addtags(maxPair.tags)
+                maxPair.head.addpair(maxPair.tail.text, score, maxPair.pos, maxPair.tags)
 
-            word.bestpair = maxPart
+            word.bestpair = maxPair
 
             return word.bestpair

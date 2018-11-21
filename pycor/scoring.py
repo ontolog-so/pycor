@@ -30,7 +30,7 @@ def default_scorepair(pair, word, context, prevWords, nextWords):
     
     if pair.tail :
         # ts = (pair.tail.occurrence() *0.009) - (len(pair.tail.text) * 0.09)
-        ts = -len(pair.tail.text) 
+        ts = len(pair.tail.text) 
 
     
     if len(cheeonPos & pair.head.pos)>0:
@@ -47,7 +47,8 @@ def default_scorepair(pair, word, context, prevWords, nextWords):
                 penalty -= 1
 
     try:
-        pair.score = 1/(1 + math.e**(-hs-score + ts + penalty) )
+        # pair.score = 1/(1 + math.e**(-hs-score + ts + penalty) )
+        pair.score = hs + score + ts - penalty
     except Exception as e:
         print(e)
         print(hs, score, ts)
@@ -73,45 +74,14 @@ def default_scorepair(pair, word, context, prevWords, nextWords):
 
 #     return pair
 
-def default_choosepair(pair, maxPair, context, prevWord, nextWord):
-    if maxPair:
-        if pair.score > maxPair.score:
-            return pair
-        elif pair.score < maxPair.score:
-            return maxPair
-        else:
-            if pair.head.score > maxPair.head.score:
-                return pair
-            elif pair.head.score < maxPair.head.score:
-                return maxPair
-            else:
-                if len(pair.tail.text) > len(maxPair.tail.text):
-                    return pair
-                else:
-                    return maxPair
+def default_choosepair(candidates, context, prevWord, nextWord):
+    length = len(candidates)
+    if length == 1:
+        return candidates[0]
+    else:
+        maxPair = None
+        for pair in candidates:
+            if maxPair is None or pair.head.score > maxPair.head.score:
+                maxPair = pair
 
-        # elif pair.score < maxPair.score:
-        #     return maxPair
-        # else :
-            # if pair.head.score > maxPair.head.score:
-            #     return pair
-            # elif pair.head.score < maxPair.head.score:
-            #     return maxPair
-            # else:
-                # TODO
-                # print("TODO::", pair, maxPair)
-                # if nextWord and type(nextWord) is sm.Word:
-                #     if len(nextWord.bestpair.pos & pair.pos) < 1:
-                #         if ("Y" in nextWord.bestpair.pos) and "Y" in pair.pos:
-                #             return maxPair
-                #         else :
-                #             return pair
-                #     else:
-                #         return pair
-                # else :
-                #     if ("Y" in pair.pos):
-                #         return pair
-                #     else:
-                #         return maxPair
-    else :
-        return pair
+        return maxPair
