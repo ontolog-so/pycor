@@ -34,22 +34,23 @@ def isdigit(text, index):
     return text[index].isdigit() 
 
 class Node:
-    def __init__(self, ch):
+    def __init__(self, parent, ch):
         self.ch = ch
+        self.parent = parent
         self.children = {}
         self.endCount = 0
     
     def getChild(self, ch):
         cn = self.children.get(ch)
         if cn is None:
-            cn = Node(ch)
+            cn = Node(self, ch)
             self.children[ch] = cn
         return cn
     
     # 자기 아래 후손들의 전체 개수 
     def countDesc(self):
         cnt = len(self.children)
-        for chn in self.children:
+        for chn in self.children.values():
             cnt += chn.countDesc()
         return cnt
 
@@ -69,7 +70,7 @@ class Node:
 
 class Tree:
     def __init__(self):
-        self.root = Node('')
+        self.root = Node(None,'')
         
     def digestword(self, word):
         length = len(word)
@@ -136,7 +137,7 @@ class Tree:
             file.close()
 
 
-    def loadfiles(self,data_dir, pattern="*.txt", limit=0):
+    def loadFromDir(self,data_dir, pattern="*.txt", limit=0):
         """ Load training data """
         filelist = utils.listfiles(data_dir,pattern)
         if limit > 0:
@@ -147,6 +148,17 @@ class Tree:
             if index % 100 == 0:
                 print(" > ", index)
         print('')
+
+    def loadfiles(self,filelist, limit=0):
+        if limit > 0:
+            filelist = filelist[:limit]
+
+        for index, file in enumerate(filelist):
+            self.loadfile(file)
+            if index % 100 == 0:
+                print(" > ", index)
+        print('')
+        
     def whitenodes(self, path):
         import csv
         with open(path, 'w', encoding='utf-8') as file :
@@ -164,3 +176,47 @@ class Tree:
         for child in node.children.values():
             self.writenode(child,buf,writer)
 
+
+    def rebuildtree(self):
+        newRoot = Node('')
+
+        for node in self.root.children.values():
+            self.rebuildnode(node,'',newRoot)
+
+        return newRoot
+
+    def rebuildnode(self, node, buf, parent):
+        buf += node.ch
+        
+        if node.count()>1 or node.endCount>0:
+            parent = parent.getChild(buf)
+            parent.endCount = node.endCount
+            buf = ''
+        
+        for child in node.children.values():
+            self.rebuildnode(child,buf,parent)
+
+    def treetoarray(self, root):
+        rootarray = []
+
+        for node in root.children.values():
+            arrs = self.nodetoarrays(node,None)
+            rootarray.extend(arrs)
+        return rootarray
+
+    def nodetoarrays(self, node, prev):
+        rtnArr = []
+
+        arr = []
+        if prev:
+            arr.extend(prev)
+
+        if node.count()>1 or node.endCount>0:
+            arr.append(node.ch)
+            rtnArr.append(arr)
+
+        for child in node.children.values():
+            arrs = self.nodetoarrays(child,arr)
+            rtnArr.extend(arrs)
+        
+        return rtnArr
