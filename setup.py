@@ -13,15 +13,15 @@ setup(
     author           = 'Ikchan Kwon',
     author_email     = 'ontolog.so@gmail.com',
     url              = 'https://github.com/ontolog-so/pycor',
-    download_url     = 'https://github.com/ontolog-so/pykor/archive/0.0.7.tar.gz',
+    download_url     = 'https://github.com/ontolog-so/pykor/archive/0.0.8.tar.gz',
     license          = 'MIT',
     install_requires = [ 'pandas' ],
     packages         = find_packages(exclude = ['bisect', 'notebooks', 'samples']),
     keywords         = ['Korean NLP', 'POS Tagger', 'Natural Language Contextual Parser'],
-    python_requires  = '>=3.6',
+    python_requires  = '>=3.5',
     # package_data     =  {},
     # zip_safe=False,
     classifiers      = [
-        'Programming Language :: Python :: 3.6'
+        'Programming Language :: Python :: 3.5'
     ]
 )
