@@ -178,7 +178,7 @@ class Tree:
 
 
     def rebuildtree(self):
-        newRoot = Node('')
+        newRoot = Node(None,'')
 
         for node in self.root.children.values():
             self.rebuildnode(node,'',newRoot)

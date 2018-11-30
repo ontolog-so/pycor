@@ -13,9 +13,13 @@ def readfiles(filelist, limit=0):
 
     print("Files loaded. Ellapsed time:", (time.time() - startTime))
 
-    # newRoot = tree.rebuildtree()
-
     wordmap = buildWordMap(tree.root)
+
+    # newRoot = tree.rebuildtree()
+    # print("Rebuild Tree. Ellapsed time:", (time.time() - startTime))
+    # wordmap = buildWordMap(newRoot)
+
+
     print("WordMap built. Ellapsed time:", (time.time() - startTime))
 
     print("Words Count:", len(wordmap.words.values()))
@@ -23,7 +27,7 @@ def readfiles(filelist, limit=0):
     print("Heads Count:", len(wordmap.heads))
     print("Tails Count:", len(wordmap.tails))
     
-    classfyHeads(wordmap.heads.values(), wordmap)
+    # classfyHeads(wordmap.heads.values(), wordmap)
 
     endTime = time.time()
     print("Ellapsed time:", (endTime - startTime))
@@ -92,8 +96,9 @@ def buildword(node, prevtext, wordmap, wordTokens,ambiguosMap):
                             addHeadPair(wordObj, p.head, p.tail, p, node)
                             pairs.append(p)
                         
-    elif node.count()>3 :
-        head = gethead(text, wordmap)
+    # elif node.count()>3 :
+    #     head = gethead(text, wordmap)
+    #     print(text)
 
     for child in node.children.values():
         buildword(child,text,wordmap, wordTokens, ambiguosMap)
@@ -128,10 +133,13 @@ def addHeadPair(wordObj, head, tail, pair, node):
 def score(pair, word, head, tail, node):
     pair.head = head
     pair.tail = tail
-    score = 0.0
-
+    score = pair.score
+    
     if head:
-        score += head.occurrence() + head.score
+        if head.occurrence() > 0:
+            score += head.score / head.occurrence()
+        else:
+            score += head.score
 
     if tail:
         score += len(tail.text)
@@ -144,6 +152,9 @@ def score(pair, word, head, tail, node):
         #         score -= 1.5
 
     pair.score = score
+
+    # if node.parent:
+    #     print(head.text, tail.text, score, ":", node.parent.ch, node.parent.count(), node.ch, node.count())
 
     return pair
 
