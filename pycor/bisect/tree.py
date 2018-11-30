@@ -54,6 +54,16 @@ class Node:
             cnt += chn.countDesc()
         return cnt
 
+    # 자기 아래 후손들의 어절 개수 
+    def countWords(self):
+        cnt = 0
+        if self.endCount>0:
+            cnt += 1
+
+        for chn in self.children.values():
+            cnt += chn.countWords()
+        return cnt
+
     # 자기 아래 후손들의 전체 개수 
     def count(self):
         return len(self.children)
@@ -68,6 +78,16 @@ class Node:
     def countEnd(self):
         self.endCount += 1
 
+    def merge(self, otherNode, deep=False):
+        for nm, chn in otherNode.children.items():
+            mychn = self.children.get(nm)
+            if mychn:
+                mychn.merge(chn,deep)
+            else:
+                self.children[nm] = chn
+                if deep:
+                    chn.parent = self
+
 class Tree:
     def __init__(self):
         self.root = Node(None,'')
@@ -81,6 +101,9 @@ class Tree:
             node = node.getChild(ch)
             index += 1
         node.countEnd()
+
+    def merge(self, otherTree, deep=False):
+        self.root.merge(otherTree.root, deep)
 
     def readrow(self,text):
         length = len(text)
@@ -159,6 +182,34 @@ class Tree:
                 print(" > ", index)
         print('')
         
+    def writewords(self, path):
+        with open(path, 'w', encoding='utf-8') as file :
+            for node in self.root.children.values():
+                self.writeword(node,'',file)  
+
+    def writeword(self, node, buf, file):
+        buf += node.ch
+        if node.endCount>0:
+            file.write(buf + '\n')
+        
+        for child in node.children.values():
+            self.writeword(child,buf,file)
+
+    def buildwords(self):
+        words = []
+        rootnodes = sorted(self.root.children.values(), key=lambda val:val.ch)
+        for node in rootnodes:
+            self.buildword(node,'',words) 
+        return words
+
+    def buildword(self, node, buf, words):
+        buf += node.ch
+        if node.endCount>0:
+            words.append(buf)
+        
+        for child in node.children.values():
+            self.buildword(child,buf,words)
+
     def whitenodes(self, path):
         import csv
         with open(path, 'w', encoding='utf-8') as file :
