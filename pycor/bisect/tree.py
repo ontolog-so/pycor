@@ -202,13 +202,16 @@ class Tree:
             self.buildword(node,'',words) 
         return words
 
-    def buildword(self, node, buf, words):
+    def buildword(self, node, buf, words, depth=1):
+        if depth > 40:
+            return
+            
         buf += node.ch
         if node.endCount>0:
             words.append(buf)
         
         for child in node.children.values():
-            self.buildword(child,buf,words)
+            self.buildword(child,buf,words, depth+1)
 
     def whitenodes(self, path):
         import csv
