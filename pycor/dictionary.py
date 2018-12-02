@@ -11,41 +11,29 @@ def readfiles(filelist, limit=0):
     tree = tr.Tree()
     tree.loadfiles(filelist, limit)
 
-    print("Files loaded. Ellapsed time:", (time.time() - startTime))
-
-    wordmap = buildWordMap(tree.root)
-
-    # newRoot = tree.rebuildtree()
-    # print("Rebuild Tree. Ellapsed time:", (time.time() - startTime))
-    # wordmap = buildWordMap(newRoot)
-
-
-    print("WordMap built. Ellapsed time:", (time.time() - startTime))
-
-    print("Words Count:", len(wordmap.words.values()))
-    
-    print("Heads Count:", len(wordmap.heads))
-    print("Tails Count:", len(wordmap.tails))
-    
-    # classfyHeads(wordmap.heads.values(), wordmap)
-
     endTime = time.time()
-    print("Ellapsed time:", (endTime - startTime))
-    return wordmap
+    print("Read Files. Ellapsed time:", (endTime - startTime))
+    return tree
 
 
-def buildWordMap(treeRoot) :
+def buildwordap(treeRoot) :
+    startTime = time.time()
+
     wordmap = sm.WordMap()
-    ambiguosMap = {}
     wordTokens = parser.WordTokens('')
     
     for node in treeRoot.children.values():
-        buildword(node,"",wordmap,wordTokens, ambiguosMap)
+        buildword(node,"",wordmap,wordTokens)
     
-
+    endTime = time.time()
+    print("Build WordMap. Ellapsed time:", (endTime - startTime))
+    print("  Words Count:", len(wordmap.words.values()))
+    print("  Heads Count:", len(wordmap.heads))
+    print("  Tails Count:", len(wordmap.tails))
+    
     return wordmap
 
-def buildword(node, prevtext, wordmap, wordTokens,ambiguosMap):
+def buildword(node, prevtext, wordmap, wordTokens):
     text = prevtext + node.ch
 
     if node.endCount>0:
@@ -54,55 +42,66 @@ def buildword(node, prevtext, wordmap, wordTokens,ambiguosMap):
             wordObj = sm.Word(text)
             wordmap.addword(wordObj)
             wordTokens.set(text)
-            auxs = mor.getAuxs(wordTokens.prev())
-            if auxs:
-                maxPair = None
-                maxPairs = []
-                curidx = wordTokens.curidx
-                for aux in auxs:
-                    headtails = aux.procede(wordTokens, None, wordObj, None, None, None)
-                    if headtails:
-                        for pair in headtails:
-                            head = gethead(pair.head, wordmap)
-                            tail = gettail(pair.tail, wordmap)
-                            pair = score(pair, wordObj, head, tail, node)
-                            tail.addtags(pair.tags)
-
-                            if maxPair is None:
-                                maxPair = pair
-                            elif pair.score > maxPair.score:
-                                maxPair = pair
-                                del maxPairs[:]
-                            elif pair.score == maxPair.score:
-                                if pair.tail != maxPair.tail:
-                                    maxPairs.append(maxPair)
-                                    # print(pair.head , pair.tail, " -- ", maxPair.head, maxPair.tail)
-                                    maxPair = pair
-                                
-                    wordTokens.setPos(curidx)
-
-                if maxPair:
-                    if len(maxPairs) == 0:
-                        wordObj.addPair(maxPair)
-                        addHeadPair(wordObj, maxPair.head, maxPair.tail, maxPair, node)
-                        if maxPair.tail:
-                            maxPair.tail.score += 1
-                    else:
-                        pairs = []
-                        ambiguosMap[wordObj] = pairs
-                        addHeadPair(wordObj, maxPair.head, maxPair.tail, maxPair, node)
-                        pairs.append(maxPair)
-                        for p in maxPairs:
-                            addHeadPair(wordObj, p.head, p.tail, p, node)
-                            pairs.append(p)
-                        
-    # elif node.count()>3 :
-    #     head = gethead(text, wordmap)
-    #     print(text)
-
+            processWord(wordTokens, wordObj, wordmap, node)
+            
     for child in node.children.values():
-        buildword(child,text,wordmap, wordTokens, ambiguosMap)
+        buildword(child,text,wordmap, wordTokens)
 
+
+def rebuildwordmap(wordmap):
+    startTime = time.time()
+
+    wordTokens = parser.WordTokens('')
+    for text, wordObj in wordmap.words.items():
+        wordTokens.set(text)
+        processWord(wordTokens, wordObj, wordmap, None)
+
+    print("Rebuild WordMap. Ellapsed time:", (time.time() - startTime))
+    print("  Words Count:", len(wordmap.words.values()))
+    print("  Heads Count:", len(wordmap.heads))
+    print("  Tails Count:", len(wordmap.tails))
+    return wordmap
+
+
+def processWord(wordTokens, wordObj, wordmap, node):
+    auxs = mor.getAuxs(wordTokens.prev())
+    if auxs:
+        maxPair = None
+        maxPairs = []
+        curidx = wordTokens.curidx
+        for aux in auxs:
+            headtails = aux.procede(wordTokens, None, wordObj, None, None, None)
+            if headtails:
+                for pair in headtails:
+                    head = gethead(pair.head, wordmap)
+                    tail = gettail(pair.tail, wordmap)
+                    pair = score(pair, wordObj, head, tail, node, wordmap)
+                    tail.addtags(pair.tags)
+
+                    if maxPair is None:
+                        maxPair = pair
+                    elif pair.score > maxPair.score:
+                        maxPair = pair
+                        del maxPairs[:]
+                    elif pair.score == maxPair.score:
+                        if pair.tail != maxPair.tail:
+                            maxPairs.append(maxPair)
+                            # print(pair.head , pair.tail, " -- ", maxPair.head, maxPair.tail)
+                            maxPair = pair
+                        
+            wordTokens.setPos(curidx)
+
+        if maxPair:
+            wordObj.addPair(maxPair)
+            addHeadPair(wordObj, maxPair.head, maxPair.tail, maxPair, node)
+            if maxPair.tail:
+                maxPair.tail.score += 1
+
+            if len(maxPairs) > 0:
+                for p in maxPairs:
+                    wordObj.addPair(maxPair)
+                    addHeadPair(wordObj, p.head, p.tail, p, node)
+                
 def classfyHeads(heads,wordmap):
     tags = set()
     for head in heads:
@@ -127,10 +126,11 @@ def classfyHeads(heads,wordmap):
 
 def addHeadPair(wordObj, head, tail, pair, node):
     head.score = pair.score
-    pairInfo = head.addpair(tail.text, pair.score, pair.pos, pair.tags )
-    pairInfo[3] = node.countDesc()
+    pairInfo = head.addpair(tail.text, pair.score, pair.pos, tail.tags )
+    if node:
+        pairInfo[3] = node.countDesc()
 
-def score(pair, word, head, tail, node):
+def score(pair, word, head, tail, node, wordmap):
     pair.head = head
     pair.tail = tail
     score = pair.score
@@ -145,8 +145,7 @@ def score(pair, word, head, tail, node):
         score += len(tail.text)
 
     if pair.ambi:
-        if head.score<1:
-            score -= 1.5 + head.score
+        score -= 1.5 + head.score
         # if node.parent:
         #     if node.parent.count() > node.endCount:
         #         score -= 1.5
