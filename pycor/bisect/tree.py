@@ -202,13 +202,14 @@ class Tree:
         for node in rootnodes:
             try :
                 self.buildword(node,'',words) 
-            except Exception as e:
+            except RuntimeError as e:
                 logging.error("ERROR %s" ,e)
                 
         return words
 
     def buildword(self, node, buf, words, depth=1):
-        if depth>20:
+        if depth>10:
+            logging.error("Exceed Depth %d. Buffer=%s", depth, buf)
             return
 
         buf += node.ch
@@ -218,7 +219,7 @@ class Tree:
         for child in node.children.values():
             try:
                 self.buildword(child,buf,words, depth+1)
-            except RecursionError as e:
+            except RuntimeError as e:
                 logging.error("RecursionError %s" ,e)
                 return
 
