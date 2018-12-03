@@ -166,10 +166,10 @@ class Head:
         if not(tail in self.tails):
             self.tails.append(tail)
 
-    def addpair(self, tailtext, score, pos, tags):
+    def addpair(self, tailtext, score, pos, tags, word):
         pair = self.pairs.get(tailtext)
         if pair is None:
-            pair = [score, pos, set(tags),1]
+            pair = [score, pos, set(tags),1, word]
             self.pairs[tailtext] = pair
         else:
             pair[0] += score
@@ -400,7 +400,7 @@ class WordMap :
                 for tailtext, pair in head.pairs.items():
                     mypair = myhead.pairs.get(tailtext)
                     if mypair is None:
-                        mypair = myhead.addpair(tailtext, pair[0], pair[1], pair[2])
+                        mypair = myhead.addpair(tailtext, pair[0], pair[1], pair[2],pair[4])
                         mypair[3] = pair[3]
 
             
@@ -434,10 +434,10 @@ class WordMap :
             for head in list:
                 if head.score:
                     if len(head.pairs) == 0:
-                        writer.writerow([head.text, '', head.score, '+'.join(head.pos), '', head.occurrence()])
+                        writer.writerow([head.text, '', head.score, '+'.join(head.pos), '', head.occurrence(),head.text])
                     else:
                         for tail, pair in head.pairs.items():
-                            writer.writerow([head.text, tail, pair[0], '+'.join(pair[1]), '+'.join(pair[2]),pair[3] ]) 
+                            writer.writerow([head.text, tail, pair[0], '+'.join(pair[1]), '+'.join(pair[2]),pair[3],pair[4] ]) 
 
             csvfile.close()
         print("Save ", path,  "  소요시간:" , round(time.time() - starttime, 3))
@@ -457,12 +457,13 @@ class WordMap :
                 pos = set(row[3].split("+")) # pos
                 tags = row[4].split("+") # tags
                 count = int(row[5]) # count
+                word = row[6] # word
 
                 head = self.heads.get(text)
                 if head is None:
                     head = Head(text)
                     self.heads[text] = head
-                pair = head.addpair(tailtext,score,pos,tags)
+                pair = head.addpair(tailtext,score,pos,tags,word)
                 pair[3] = count
             csvfile.close()
         

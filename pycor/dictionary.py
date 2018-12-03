@@ -128,7 +128,7 @@ def classfyHeads(heads,wordmap):
 
 def addHeadPair(wordObj, head, tail, pair, node):
     head.score = pair.score
-    pairInfo = head.addpair(tail.text, pair.score, pair.pos, tail.tags )
+    pairInfo = head.addpair(tail.text, pair.score, pair.pos, tail.tags, wordObj.text )
     if node:
         pairInfo[3] = node.countDesc()
 
@@ -147,7 +147,7 @@ def score(pair, word, head, tail, node, wordmap):
         score += len(tail.text)
 
     if pair.ambi:
-        score -= 1.5 + head.score
+        score -= 1.5
         # if node.parent:
         #     if node.parent.count() > node.endCount:
         #         score -= 1.5
