@@ -52,6 +52,7 @@ def rebuildwordmap(wordmap):
     startTime = time.time()
 
     wordTokens = parser.WordTokens('')
+
     for text, wordObj in wordmap.words.items():
         wordTokens.set(text)
         processWord(wordTokens, wordObj, wordmap, None)
@@ -61,7 +62,6 @@ def rebuildwordmap(wordmap):
     print("  Heads Count:", len(wordmap.heads))
     print("  Tails Count:", len(wordmap.tails))
     return wordmap
-
 
 def processWord(wordTokens, wordObj, wordmap, node):
     auxs = mor.getAuxs(wordTokens.prev())
