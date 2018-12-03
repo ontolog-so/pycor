@@ -1,4 +1,5 @@
 from pycor import utils
+import sys
 import logging
 
 # CH_WORD_END = chr(31)
@@ -208,7 +209,7 @@ class Tree:
         return words
 
     def buildword(self, node, buf, words, depth=1):
-        if depth>10:
+        if depth>=sys.getrecursionlimit():
             logging.error("Exceed Depth %d. Buffer=%s", depth, buf)
             return
 
@@ -219,7 +220,8 @@ class Tree:
         for child in node.children.values():
             try:
                 self.buildword(child,buf,words, depth+1)
-            except RuntimeError as e:
+            except RecursionError as e:
+                logging.error("Recursion Limit %d", sys.getrecursionlimit())
                 logging.error("RecursionError %s" ,e)
                 return
 
