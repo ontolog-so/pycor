@@ -208,16 +208,17 @@ class Tree:
         return words
 
     def buildword(self, node, buf, words, depth=1):
-        if depth > 30:
-            return
-
         buf += node.ch
         if node.endCount>0:
             words.append(buf)
         
         for child in node.children.values():
-            self.buildword(child,buf,words, depth+1)
-
+            try:
+                self.buildword(child,buf,words, depth+1)
+            except RecursionError as e:
+                logging.error("RecursionError %s" ,e)
+                return
+                
     def whitenodes(self, path):
         import csv
         with open(path, 'w', encoding='utf-8') as file :
