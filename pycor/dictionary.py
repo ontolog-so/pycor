@@ -16,7 +16,7 @@ def readfiles(filelist, limit=0):
     return tree
 
 
-def buildwordap(treeRoot) :
+def buildwordmap(treeRoot) :
     startTime = time.time()
 
     wordmap = sm.WordMap()
