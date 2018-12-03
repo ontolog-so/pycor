@@ -203,7 +203,7 @@ class Tree:
         return words
 
     def buildword(self, node, buf, words, depth=1):
-        if depth > 40:
+        if depth > 30:
             return
 
         buf += node.ch
