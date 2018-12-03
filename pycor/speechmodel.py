@@ -370,7 +370,7 @@ class WordMap :
         self.writetails(path=modelDir + "/tails.csv")
         self.writecollocations(path=modelDir + "/collocations.csv")
         self.savedic(path=modelDir + "/dictionary.csv")
-        self.clearheads()
+        
 
     def load(self, modelDir):
         self.readWordModel(path=modelDir + "/model.csv")
@@ -388,6 +388,22 @@ class WordMap :
                 del(self.heads[head.text])
         print("Clear Heads:", len(self.heads), "remains.")
 
+    # head dict를 합친다. 
+    def mergemodel(self, heads):
+        for head in heads.values():
+            myhead = self.heads.get(head.text)
+
+            if myhead is None:
+                myhead = head
+                self.heads[head.text] = myhead
+            else:
+                for tailtext, pair in head.pairs.items():
+                    mypair = myhead.pairs.get(tailtext)
+                    if mypair is None:
+                        mypair = myhead.addpair(tailtext, pair[0], pair[1], pair[2])
+                        mypair[3] = pair[3]
+
+            
     #####################################################################
     #  결과 파일 출력 
     #####################################################################
@@ -406,7 +422,7 @@ class WordMap :
     #########################
     ## Head + Tail 출력 
     #########################
-    def writeWordModel(self, path="model/heads.csv", sorter=sortParticle, reversed=False):
+    def writeWordModel(self, path="model/model.csv", sorter=sortParticle, reversed=False):
         starttime = time.time()
         with open(path, 'w', encoding='utf-8') as csvfile :
             writer = csv.writer(csvfile)
@@ -430,7 +446,7 @@ class WordMap :
     #########################
     ## Head + Tail 읽기 
     #########################
-    def readWordModel(self, path="model/heads.csv"):
+    def readWordModel(self, path="model/model.csv"):
         starttime = time.time()
         with open(path, 'r', encoding='utf-8') as csvfile :
             reader = csv.reader(csvfile)

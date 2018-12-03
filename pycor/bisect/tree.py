@@ -205,7 +205,7 @@ class Tree:
     def buildword(self, node, buf, words, depth=1):
         if depth > 40:
             return
-            
+
         buf += node.ch
         if node.endCount>0:
             words.append(buf)

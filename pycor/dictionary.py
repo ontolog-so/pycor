@@ -101,7 +101,9 @@ def processWord(wordTokens, wordObj, wordmap, node):
                 for p in maxPairs:
                     wordObj.addPair(maxPair)
                     addHeadPair(wordObj, p.head, p.tail, p, node)
-                
+    else:
+        gethead(wordObj.text, wordmap)
+
 def classfyHeads(heads,wordmap):
     tags = set()
     for head in heads:
