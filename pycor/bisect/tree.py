@@ -1,4 +1,5 @@
 from pycor import utils
+import logging
 
 # CH_WORD_END = chr(31)
 
@@ -199,7 +200,11 @@ class Tree:
         words = []
         rootnodes = sorted(self.root.children.values(), key=lambda val:val.ch)
         for node in rootnodes:
-            self.buildword(node,'',words) 
+            try :
+                self.buildword(node,'',words) 
+            except Exception as e:
+                logging.error("ERROR %s" ,e)
+                
         return words
 
     def buildword(self, node, buf, words, depth=1):
