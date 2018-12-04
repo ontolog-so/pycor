@@ -374,7 +374,10 @@ class WordMap :
 
     def load(self, modelDir):
         self.readWordModel(path=modelDir + "/model.csv")
-        self.readtails(path=modelDir + "/tails.csv")
+        tailsPath = modelDir + "/tails.csv"
+        import os.path
+        if os.path.isfile(tailsPath) :
+            self.readtails(path=tailsPath)
         
     # words 비우기 
     def clearwords(self):
@@ -457,7 +460,9 @@ class WordMap :
                 pos = set(row[3].split("+")) # pos
                 tags = row[4].split("+") # tags
                 count = int(row[5]) # count
-                word = row[6] # word
+                word = None
+                if len(row)>6:
+                    word = row[6] # word
 
                 head = self.heads.get(text)
                 if head is None:
@@ -471,7 +476,8 @@ class WordMap :
             if len(head.pairs) > 0:
                 score = 0
                 for pair in head.pairs.values():
-                    score += pair[0]/pair[3]
+                    if pair[3]>0:
+                        score += pair[0]/pair[3]
                     head.pos.update(pair[1])
                 head.score = score / len(head.pairs)
 

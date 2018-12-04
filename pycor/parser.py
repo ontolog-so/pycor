@@ -598,7 +598,7 @@ class SentenceParser:
             if maxPair.tail and maxPair.tail != sm._VOID_Tail:
                 maxPair.tail.score += score
                 maxPair.tail.addtags(maxPair.tags)
-                maxPair.head.addpair(maxPair.tail.text, score, maxPair.pos, maxPair.tags)
+                maxPair.head.addpair(maxPair.tail.text, score, maxPair.pos, maxPair.tags, word.text)
 
             word.bestpair = maxPair
 
