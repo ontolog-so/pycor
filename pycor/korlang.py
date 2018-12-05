@@ -5,7 +5,7 @@ from pycor.std import *
 
 __all__ = ["getmodel", "setmodel", "loadmodel", "loaddic", "savemodel","addresolver", "removeresolver",
             "train", "trainfiles", "buildvocab", "readfile", "readtext", "resolveword", "setscorefunction",
-            "trim","trimfile","__trim", "keywords","keywordsFromText", "setwordlimit", 
+            "trimstem", "trimstemaux", "trim", "trimfile","__trim", "keywords","keywordsFromText", "setwordlimit", 
             "printSentences", "abstract", "abstractKeywords","totexts", "registerKeyword",
             "debugword"]
 
@@ -144,6 +144,46 @@ def __trimwordgroup(wordgroup, rtns_array, tags_array):
         if len(words)>0:
             rtns_array.append(words)
             tags_array.append(tags)
+
+def trimstem(text):
+    sentences = _trainer.readtext(text)
+    lines = []
+
+    for sentence in sentences:
+        line = __trimstem(sentence)
+        lines.append(line)
+    return lines
+
+def __trimstem(group):
+    line = []
+    for pair in group.pairs: 
+        if type(pair) is sm.Pair: 
+            line.append(pair.head.text)
+        elif issubclass(type(pair),sm.WordGroup) : 
+            l = __trimstem(pair)
+            line.extend(l)
+    return line
+    
+def trimstemaux(text):
+    sentences = _trainer.readtext(text)
+    lines = []
+
+    for sentence in sentences:
+        line = __trimstemaux(sentence)
+        lines.append(line)
+    return lines
+
+def __trimstemaux(group):
+    line = []
+    for pair in group.pairs: 
+        if type(pair) is sm.Pair: 
+            line.append((pair.head.text,pair.tail.text))
+        elif issubclass(type(pair),sm.WordGroup) : 
+            l = __trimstemaux(pair)
+            line.extend(l)
+    return line
+
+
 
 def keywords(sentence_array, rate=0.05):
     """
